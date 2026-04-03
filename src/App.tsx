@@ -1,14 +1,19 @@
-/* Main App Component - Handles routing (using react-router-dom), query client and other providers - use this file to add all routes */
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import Index from './pages/Index'
 import NotFound from './pages/NotFound'
-import Layout from './components/Layout'
+import PublicLayout from './components/PublicLayout'
+import PrivateLayout from './components/PrivateLayout'
 
-// ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
-// AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
+import Home from './pages/public/Home'
+import Login from './pages/public/Login'
+import Ciclos from './pages/public/Ciclos'
+
+import Dashboard from './pages/private/Dashboard'
+import Profile from './pages/private/Profile'
+import EAD from './pages/private/EAD'
+import Grades from './pages/private/Grades'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -16,10 +21,64 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES MUST BE ADDED HERE */}
+        {/* Public Routes */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/ciclos" element={<Ciclos />} />
+          <Route
+            path="/institucional"
+            element={
+              <div className="container py-24 text-center">
+                <h1 className="text-4xl font-bold">Institucional</h1>
+                <p className="mt-4">Página em construção</p>
+              </div>
+            }
+          />
+          <Route
+            path="/parceiros"
+            element={
+              <div className="container py-24 text-center">
+                <h1 className="text-4xl font-bold">Parceiros</h1>
+                <p className="mt-4">Página em construção</p>
+              </div>
+            }
+          />
+          <Route
+            path="/matriculas"
+            element={
+              <div className="container py-24 text-center">
+                <h1 className="text-4xl font-bold">Matrículas 2027</h1>
+                <p className="mt-4">Página em construção</p>
+              </div>
+            }
+          />
         </Route>
+
+        {/* Private Routes (App) */}
+        <Route path="/app" element={<PrivateLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="ead" element={<EAD />} />
+          <Route path="grades" element={<Grades />} />
+          <Route
+            path="financial"
+            element={
+              <div className="p-8 text-center text-muted-foreground">
+                Módulo Financeiro em desenvolvimento
+              </div>
+            }
+          />
+          <Route
+            path="inbox"
+            element={
+              <div className="p-8 text-center text-muted-foreground">
+                Caixa de Entrada em desenvolvimento
+              </div>
+            }
+          />
+        </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
