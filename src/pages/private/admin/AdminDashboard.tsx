@@ -6,6 +6,7 @@ import TabHero from './TabHero'
 import TabMission from './TabMission'
 import TabCycles from './TabCycles'
 import TabPartners from './TabPartners'
+import TabUsers from './TabUsers'
 
 export default function AdminDashboard() {
   return (
@@ -22,13 +23,27 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="hero" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="hero">Banners</TabsTrigger>
-          <TabsTrigger value="mission">Missão</TabsTrigger>
-          <TabsTrigger value="cycles">Ciclos</TabsTrigger>
-          <TabsTrigger value="partners">Parceiros</TabsTrigger>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="flex flex-wrap h-auto w-full max-w-4xl justify-start gap-1 p-1 bg-muted rounded-xl">
+          <TabsTrigger value="users" className="flex-1 min-w-[120px] rounded-lg">
+            Usuários
+          </TabsTrigger>
+          <TabsTrigger value="hero" className="flex-1 min-w-[120px] rounded-lg">
+            Banners
+          </TabsTrigger>
+          <TabsTrigger value="mission" className="flex-1 min-w-[120px] rounded-lg">
+            Missão
+          </TabsTrigger>
+          <TabsTrigger value="cycles" className="flex-1 min-w-[120px] rounded-lg">
+            Ciclos
+          </TabsTrigger>
+          <TabsTrigger value="partners" className="flex-1 min-w-[120px] rounded-lg">
+            Parceiros
+          </TabsTrigger>
         </TabsList>
+        <TabsContent value="users">
+          <TabUsers />
+        </TabsContent>
         <TabsContent value="hero">
           <TabHero />
         </TabsContent>
