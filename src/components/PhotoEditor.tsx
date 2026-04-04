@@ -152,7 +152,18 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
               <span className="text-sm">Sem foto selecionada</span>
             </div>
           )}
-          <div className="absolute inset-0 border-2 border-yellow-500/30 pointer-events-none rounded-md" />
+          <div className="absolute inset-0 border-2 border-yellow-500/50 pointer-events-none rounded-md z-10" />
+          <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 opacity-30 z-10">
+            <div className="border-r border-b border-white"></div>
+            <div className="border-r border-b border-white"></div>
+            <div className="border-b border-white"></div>
+            <div className="border-r border-b border-white"></div>
+            <div className="border-r border-b border-white"></div>
+            <div className="border-b border-white"></div>
+            <div className="border-r border-white"></div>
+            <div className="border-r border-white"></div>
+            <div></div>
+          </div>
         </div>
 
         <div className="w-full max-w-[240px] flex items-center gap-3 mt-auto">
@@ -161,8 +172,8 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
             value={zoom}
             onValueChange={setZoom}
             min={0.1}
-            max={5}
-            step={0.01}
+            max={10}
+            step={0.05}
             disabled={!image}
           />
           <ZoomIn className="w-4 h-4 text-muted-foreground" />
