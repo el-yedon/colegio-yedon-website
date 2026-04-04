@@ -31,16 +31,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 export default function PrivateLayout() {
   const { user, logout, isAuthenticated } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login')
     }
   }, [isAuthenticated, navigate])
+
+  useEffect(() => {
+    if (user && location.pathname.startsWith('/app/admin') && user.role !== 'admin') {
+      navigate('/app')
+    }
+  }, [user, location, navigate])
 
   if (!user) return null
 
@@ -66,6 +74,10 @@ export default function PrivateLayout() {
         { title: 'Lançar Notas', url: '/app/grades', icon: FileText },
         { title: 'Aulas EAD', url: '/app/ead', icon: Video },
       ]
+    }
+
+    if (user.role === 'admin') {
+      return [{ title: 'Gestão CMS', url: '/app/admin', icon: Settings }, ...baseItems]
     }
 
     return baseItems

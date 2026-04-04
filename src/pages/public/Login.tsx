@@ -26,7 +26,11 @@ export default function Login() {
       role,
       avatar: `https://img.usecurling.com/ppl/thumbnail?seed=${role}`,
     })
-    navigate('/app')
+    if (role === 'admin') {
+      navigate('/app/admin')
+    } else {
+      navigate('/app')
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {

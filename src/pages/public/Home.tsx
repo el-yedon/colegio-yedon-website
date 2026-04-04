@@ -11,9 +11,17 @@ import {
 } from '@/components/ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
 import { useRef } from 'react'
+import { useContentStore } from '@/stores/useContentStore'
+import * as Icons from 'lucide-react'
+
+const DynamicIcon = ({ name, className }: { name: string; className?: string }) => {
+  const Icon = (Icons as any)[name] || Icons.HelpCircle
+  return <Icon className={className} />
+}
 
 export default function Home() {
   const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }))
+  const { heroSlides, mission, cycles, partners } = useContentStore()
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -21,29 +29,7 @@ export default function Home() {
       <section className="w-full bg-slate-950 text-white relative">
         <Carousel plugins={[plugin.current]} className="w-full" opts={{ loop: true }}>
           <CarouselContent>
-            {[
-              {
-                title: 'Yedon Roots',
-                subtitle: 'Fundamental I',
-                desc: 'Descobrindo o mundo com alegria e curiosidade. O início de uma jornada brilhante.',
-                img: 'https://img.usecurling.com/p/1600/600?q=happy%20children%20school%20learning',
-                color: 'bg-emerald-500/20',
-              },
-              {
-                title: 'Yedon Path',
-                subtitle: 'Fundamental II',
-                desc: 'Construindo caminhos, colaboração e pensamento crítico para os desafios do amanhã.',
-                img: 'https://img.usecurling.com/p/1600/600?q=teenagers%20studying%20together%20classroom',
-                color: 'bg-blue-500/20',
-              },
-              {
-                title: 'Yedon Horizon',
-                subtitle: 'Ensino Médio',
-                desc: 'Olhando para o futuro com excelência acadêmica e preparação para a vida.',
-                img: 'https://img.usecurling.com/p/1600/600?q=high%20school%20students%20technology%20lab',
-                color: 'bg-purple-500/20',
-              },
-            ].map((slide, idx) => (
+            {heroSlides.map((slide, idx) => (
               <CarouselItem key={idx} className="relative h-[600px] w-full">
                 <img
                   src={slide.img}
@@ -116,30 +102,17 @@ export default function Home() {
       {/* Mission Section */}
       <section className="py-24 bg-white">
         <div className="container px-4 text-center max-w-4xl mx-auto">
-          <h2 className="text-primary font-bold tracking-wide uppercase mb-3">Nossa Essência</h2>
+          <h2 className="text-primary font-bold tracking-wide uppercase mb-3">
+            {mission.subtitle}
+          </h2>
           <h3 className="text-3xl md:text-5xl font-display font-bold mb-8 text-slate-900">
-            Formação Integral para um Mundo em Evolução
+            {mission.title}
           </h3>
-          <p className="text-lg text-slate-600 mb-12 leading-relaxed">
-            No Colégio Yedon, acreditamos que a educação vai muito além da sala de aula. Preparamos
-            nossos alunos para serem cidadãos globais, críticos, criativos e empáticos, com
-            princípios inegociáveis.
+          <p className="text-lg text-slate-600 mb-12 leading-relaxed whitespace-pre-line">
+            {mission.desc}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            {[
-              {
-                title: 'Excelência Acadêmica',
-                desc: 'Metodologia comprovada em parceria com o Sistema Objetivo.',
-              },
-              {
-                title: 'Inteligência Socioemocional',
-                desc: 'Desenvolvimento de habilidades para a vida, empatia e resiliência.',
-              },
-              {
-                title: 'Inovação Tecnológica',
-                desc: 'Ambientes digitais e EAD integrados ao aprendizado diário.',
-              },
-            ].map((item, i) => (
+            {mission.features.map((item, i) => (
               <div
                 key={i}
                 className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
@@ -167,44 +140,20 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Yedon Roots',
-                icon: BookOpen,
-                desc: 'Fundamental I (1º ao 5º ano)',
-                color: 'text-emerald-600',
-                bg: 'bg-emerald-50',
-                border: 'border-emerald-200',
-              },
-              {
-                name: 'Yedon Path',
-                icon: Compass,
-                desc: 'Fundamental II (6º ao 9º ano)',
-                color: 'text-blue-600',
-                bg: 'bg-blue-50',
-                border: 'border-blue-200',
-              },
-              {
-                name: 'Yedon Horizon',
-                icon: Rocket,
-                desc: 'Ensino Médio (1ª a 3ª série)',
-                color: 'text-purple-600',
-                bg: 'bg-purple-50',
-                border: 'border-purple-200',
-              },
-            ].map((cycle, i) => (
+            {cycles.map((cycle, i) => (
               <Card
                 key={i}
                 className={`overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 ${cycle.border} hover:-translate-y-2`}
               >
                 <div className={`p-8 ${cycle.bg} h-full flex flex-col`}>
-                  <cycle.icon
+                  <DynamicIcon
+                    name={cycle.icon}
                     className={`h-12 w-12 ${cycle.color} mb-6 group-hover:scale-110 transition-transform`}
                   />
                   <h3 className="text-2xl font-display font-bold mb-2 text-slate-900">
                     {cycle.name}
                   </h3>
-                  <p className="text-slate-600 font-medium mb-6">{cycle.desc}</p>
+                  <p className="text-slate-600 font-medium mb-6">{cycle.shortDesc}</p>
                   <div className="mt-auto pt-6 flex items-center text-primary font-semibold group-hover:text-secondary-foreground transition-colors cursor-pointer">
                     Saiba mais <ChevronRight className="ml-1 h-4 w-4" />
                   </div>
@@ -227,26 +176,14 @@ export default function Home() {
             {/* Duplicated for seamless scrolling */}
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex gap-16 items-center">
-                <img
-                  src="https://img.usecurling.com/i?q=school%20logo&color=solid-black"
-                  alt="Objetivo"
-                  className="h-12 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
-                />
-                <img
-                  src="https://img.usecurling.com/i?q=finance%20education&color=solid-black"
-                  alt="Gênio das Finanças"
-                  className="h-10 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
-                />
-                <img
-                  src="https://img.usecurling.com/i?q=english%20book&color=solid-black"
-                  alt="Edify"
-                  className="h-10 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
-                />
-                <img
-                  src="https://img.usecurling.com/i?q=brain%20intelligence&color=solid-black"
-                  alt="Escola da Inteligência"
-                  className="h-12 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
-                />
+                {partners.map((partner) => (
+                  <img
+                    key={partner.id}
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="h-12 object-contain opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+                  />
+                ))}
               </div>
             ))}
           </div>

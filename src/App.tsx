@@ -14,6 +14,7 @@ import Dashboard from './pages/private/Dashboard'
 import Profile from './pages/private/Profile'
 import EAD from './pages/private/EAD'
 import Grades from './pages/private/Grades'
+import AdminDashboard from './pages/private/admin/AdminDashboard'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -77,6 +78,7 @@ const App = () => (
               </div>
             }
           />
+          <Route path="admin" element={<AdminDashboard />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
