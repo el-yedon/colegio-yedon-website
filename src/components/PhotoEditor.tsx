@@ -13,6 +13,8 @@ interface PhotoEditorProps {
 
 const EDITOR_WIDTH = 240
 const EDITOR_HEIGHT = 320
+const TARGET_WIDTH = 600
+const TARGET_HEIGHT = 800
 
 export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEditorProps) {
   const [image, setImage] = useState<string | null>(initialImage || null)
@@ -20,6 +22,7 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -44,8 +47,8 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
 
   const handleWheel = (e: React.WheelEvent) => {
     if (!image) return
-    const zoomChange = e.deltaY > 0 ? -0.1 : 0.1
-    setZoom((z) => [Math.min(Math.max(z[0] + zoomChange, 0.5), 3)])
+    const zoomChange = e.deltaY > 0 ? -0.05 : 0.05
+    setZoom((z) => [Math.min(Math.max(z[0] + zoomChange, 0.1), 5)])
   }
 
   const handleUploadClick = () => fileInputRef.current?.click()
@@ -58,11 +61,53 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
     })
   }
 
+  const generateCroppedImage = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!image) return reject('No image')
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = TARGET_WIDTH
+        canvas.height = TARGET_HEIGHT
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject('No context')
+
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        ctx.translate(canvas.width / 2, canvas.height / 2)
+        const scaleFactor = TARGET_WIDTH / EDITOR_WIDTH
+        ctx.translate(position.x * scaleFactor, position.y * scaleFactor)
+        ctx.scale(zoom[0] * scaleFactor, zoom[0] * scaleFactor)
+        ctx.drawImage(img, -img.width / 2, -img.height / 2)
+
+        resolve(canvas.toDataURL('image/jpeg', 0.9))
+      }
+      img.onerror = () => reject('Image load error')
+      img.src = image
+    })
+  }
+
+  const handleSave = async () => {
+    if (!image) return
+    setIsSaving(true)
+    try {
+      const croppedDataUrl = await generateCroppedImage()
+      onSave(croppedDataUrl)
+    } catch (err) {
+      console.error('Error cropping image:', err)
+      onSave(image)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const imageTransform = `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px)) scale(${zoom[0]})`
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 animate-fade-in">
-      <div className="flex-1 flex flex-col items-center gap-6 bg-slate-50/50 p-6 rounded-xl border border-dashed">
+    <div className="flex flex-col md:flex-row gap-8 animate-fade-in h-full">
+      <div className="flex-1 flex flex-col items-center gap-6 bg-slate-50/50 p-6 rounded-xl border border-dashed h-full overflow-y-auto">
         <div className="flex w-full justify-between items-center mb-2">
           <h3 className="font-semibold text-blue-950">Ajuste de Foto (3:4)</h3>
           <Button variant="outline" size="sm" onClick={handleUploadClick}>
@@ -110,14 +155,14 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
           <div className="absolute inset-0 border-2 border-yellow-500/30 pointer-events-none rounded-md" />
         </div>
 
-        <div className="w-full max-w-[240px] flex items-center gap-3">
+        <div className="w-full max-w-[240px] flex items-center gap-3 mt-auto">
           <ZoomOut className="w-4 h-4 text-muted-foreground" />
           <Slider
             value={zoom}
             onValueChange={setZoom}
-            min={0.5}
-            max={3}
-            step={0.05}
+            min={0.1}
+            max={5}
+            step={0.01}
             disabled={!image}
           />
           <ZoomIn className="w-4 h-4 text-muted-foreground" />
@@ -150,13 +195,13 @@ export default function PhotoEditor({ initialImage, onSave, onCancel }: PhotoEdi
         <div className="w-full space-y-2 mt-auto">
           <Button
             className="w-full bg-blue-950 hover:bg-blue-900 text-yellow-500"
-            onClick={() => onSave(image || '')}
-            disabled={!image}
+            onClick={handleSave}
+            disabled={!image || isSaving}
           >
             <Save className="w-4 h-4 mr-2" />
-            Salvar Foto
+            {isSaving ? 'Salvando...' : 'Salvar Foto'}
           </Button>
-          <Button className="w-full" variant="ghost" onClick={onCancel}>
+          <Button className="w-full" variant="ghost" onClick={onCancel} disabled={isSaving}>
             <X className="w-4 h-4 mr-2" />
             Cancelar
           </Button>

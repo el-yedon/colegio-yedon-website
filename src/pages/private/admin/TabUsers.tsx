@@ -20,9 +20,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Search, Edit2, ShieldAlert } from 'lucide-react'
+import { Search, Edit2, ShieldAlert, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import PhotoEditor from '@/components/PhotoEditor'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type User = {
   id: string
@@ -81,6 +88,7 @@ export default function TabUsers() {
   const [search, setSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [currentUserRole, setCurrentUserRole] = useState('Master')
 
   const filteredUsers = users.filter(
     (u) =>
@@ -103,18 +111,37 @@ export default function TabUsers() {
 
   return (
     <div className="space-y-6 animate-fade-in pt-4">
-      <div className="flex items-center justify-between bg-blue-950 text-white p-4 rounded-xl border-l-4 border-yellow-500 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-blue-950 text-white p-4 rounded-xl border-l-4 border-yellow-500 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="p-2 bg-blue-900 rounded-lg">
             <ShieldAlert className="w-6 h-6 text-yellow-500" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Acesso Restrito: Nível Master</h3>
+            <h3 className="font-semibold text-sm">
+              {currentUserRole === 'Master' ? 'Acesso Restrito: Nível Master' : 'Acesso Restrito'}
+            </h3>
             <p className="text-xs text-blue-200 mt-0.5">
-              Permissão concedida para gerenciar dados sensíveis e padronizar fotos de identificação
-              (Proporção 3:4).
+              {currentUserRole === 'Master'
+                ? 'Permissão concedida para gerenciar dados sensíveis e padronizar fotos de identificação (Proporção 3:4).'
+                : 'Você não tem permissão de nível Master para editar as fotos de identificação.'}
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3 bg-blue-900/50 p-2 rounded-lg border border-blue-800">
+          <span className="text-xs font-medium text-blue-200 whitespace-nowrap">
+            Simular Nível:
+          </span>
+          <Select value={currentUserRole} onValueChange={setCurrentUserRole}>
+            <SelectTrigger className="w-[140px] h-8 bg-blue-950 border-blue-800 text-xs text-white focus:ring-0 focus:ring-offset-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Master">Master</SelectItem>
+              <SelectItem value="Administrador">Administrador</SelectItem>
+              <SelectItem value="Professor">Professor</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -205,8 +232,10 @@ export default function TabUsers() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="photo"
-                    className="rounded-md data-[state=active]:bg-blue-950 data-[state=active]:text-yellow-500"
+                    disabled={currentUserRole !== 'Master'}
+                    className="rounded-md data-[state=active]:bg-blue-950 data-[state=active]:text-yellow-500 disabled:opacity-50 flex items-center gap-2"
                   >
+                    {currentUserRole !== 'Master' && <Lock className="w-3 h-3" />}
                     Edição de Foto (3:4)
                   </TabsTrigger>
                 </TabsList>
@@ -244,11 +273,22 @@ export default function TabUsers() {
                 </TabsContent>
 
                 <TabsContent value="photo" className="focus-visible:outline-none h-full">
-                  <PhotoEditor
-                    initialImage={selectedUser.photo}
-                    onSave={(img) => handleSavePhoto(selectedUser.id, img)}
-                    onCancel={() => setIsSheetOpen(false)}
-                  />
+                  {currentUserRole === 'Master' ? (
+                    <PhotoEditor
+                      initialImage={selectedUser.photo}
+                      onSave={(img) => handleSavePhoto(selectedUser.id, img)}
+                      onCancel={() => setIsSheetOpen(false)}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-[400px] text-center px-4 bg-slate-50 rounded-xl border border-dashed">
+                      <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                      <h3 className="font-semibold text-lg text-blue-950">Acesso Negado</h3>
+                      <p className="text-muted-foreground text-sm max-w-[300px] mt-2">
+                        A edição de fotos de perfil com proporção estrita 3:4 é restrita apenas a
+                        usuários com o nível hierárquico <strong>Master</strong>.
+                      </p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
