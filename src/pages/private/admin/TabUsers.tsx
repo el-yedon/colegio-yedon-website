@@ -119,6 +119,7 @@ export default function TabUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
   const [currentUserRole, setCurrentUserRole] = useState('Master')
 
   const hasAccess = currentUserRole === 'Master' || currentUserRole === 'Administrador'
@@ -132,6 +133,7 @@ export default function TabUsers() {
     setSelectedUser(user)
     setEditingUser({ ...user })
     setIsSheetOpen(true)
+    setActiveTab('details')
   }
 
   const handleSaveDetails = () => {
@@ -151,9 +153,12 @@ export default function TabUsers() {
 
   const handleSavePhoto = (userId: string, newPhotoUrl: string) => {
     setUsers(users.map((u) => (u.id === userId ? { ...u, photo: newPhotoUrl } : u)))
-    if (selectedUser?.id === userId) setSelectedUser((p) => (p ? { ...p, photo: newPhotoUrl } : p))
+    if (selectedUser?.id === userId) {
+      setSelectedUser((p) => (p ? { ...p, photo: newPhotoUrl } : p))
+      setEditingUser((p) => (p ? { ...p, photo: newPhotoUrl } : p))
+    }
     toast.success('Foto atualizada com sucesso!')
-    setIsSheetOpen(false)
+    setActiveTab('details')
   }
 
   return (
@@ -281,7 +286,11 @@ export default function TabUsers() {
 
           {selectedUser && editingUser && (
             <div className="p-6 flex-1">
-              <Tabs defaultValue="details" className="w-full h-full flex flex-col">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full h-full flex flex-col"
+              >
                 <TabsList className="grid w-full grid-cols-2 mb-6 p-1 bg-muted rounded-lg">
                   <TabsTrigger value="details" className="rounded-md">
                     Dados Pessoais
@@ -298,98 +307,126 @@ export default function TabUsers() {
                   value="details"
                   className="space-y-4 animate-fade-in focus-visible:outline-none"
                 >
-                  <div className="grid gap-4 bg-slate-50 p-5 rounded-xl border">
-                    <div className="space-y-2">
-                      <Label>Nome Completo</Label>
-                      <Input
-                        value={editingUser.name}
-                        onChange={(e) =>
-                          setEditingUser((p) => (p ? { ...p, name: e.target.value } : null))
-                        }
-                        className="bg-white"
-                      />
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="w-full md:w-48 flex-shrink-0 flex flex-col items-center gap-4">
+                      <div className="w-full aspect-[3/4] rounded-xl border-2 border-blue-950/20 overflow-hidden bg-white relative shadow-sm">
+                        {editingUser.photo ? (
+                          <img
+                            src={editingUser.photo}
+                            alt={editingUser.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground bg-slate-50">
+                            <ImageIcon className="w-12 h-12 mb-2 opacity-20" />
+                            <span className="text-sm font-medium opacity-50">Sem foto</span>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-blue-950 border-blue-950/20 hover:bg-blue-50"
+                        onClick={() => setActiveTab('photo')}
+                      >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Alterar Foto
+                      </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div className="flex-1 grid gap-4 bg-slate-50 p-5 rounded-xl border">
                       <div className="space-y-2">
-                        <Label>Email</Label>
+                        <Label>Nome Completo</Label>
                         <Input
-                          value={editingUser.email}
+                          value={editingUser.name}
                           onChange={(e) =>
-                            setEditingUser((p) => (p ? { ...p, email: e.target.value } : null))
+                            setEditingUser((p) => (p ? { ...p, name: e.target.value } : null))
                           }
                           className="bg-white"
                         />
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input
+                            value={editingUser.email}
+                            onChange={(e) =>
+                              setEditingUser((p) => (p ? { ...p, email: e.target.value } : null))
+                            }
+                            className="bg-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Telefone</Label>
+                          <Input
+                            value={editingUser.phone}
+                            onChange={(e) =>
+                              setEditingUser((p) => (p ? { ...p, phone: e.target.value } : null))
+                            }
+                            className="bg-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Documentos Pessoais (CPF/RG)</Label>
+                          <Input
+                            value={editingUser.document}
+                            onChange={(e) =>
+                              setEditingUser((p) => (p ? { ...p, document: e.target.value } : null))
+                            }
+                            className="bg-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nível de Acesso</Label>
+                          <Select
+                            value={editingUser.role}
+                            onValueChange={(v) =>
+                              setEditingUser((p) => (p ? { ...p, role: v } : null))
+                            }
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Master">Master</SelectItem>
+                              <SelectItem value="Administrador">Administrador</SelectItem>
+                              <SelectItem value="Professor">Professor</SelectItem>
+                              <SelectItem value="Aluno">Aluno</SelectItem>
+                              <SelectItem value="Responsável">Responsável</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <div className="space-y-2">
-                        <Label>Telefone</Label>
-                        <Input
-                          value={editingUser.phone}
+                        <Label>Endereço Completo</Label>
+                        <Textarea
+                          value={editingUser.address}
                           onChange={(e) =>
-                            setEditingUser((p) => (p ? { ...p, phone: e.target.value } : null))
+                            setEditingUser((p) => (p ? { ...p, address: e.target.value } : null))
                           }
-                          className="bg-white"
+                          className="bg-white resize-none"
+                          rows={2}
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Documentos Pessoais (CPF/RG)</Label>
-                        <Input
-                          value={editingUser.document}
-                          onChange={(e) =>
-                            setEditingUser((p) => (p ? { ...p, document: e.target.value } : null))
-                          }
-                          className="bg-white"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Nível de Acesso</Label>
+                        <Label>Status da Conta</Label>
                         <Select
-                          value={editingUser.role}
-                          onValueChange={(v) =>
-                            setEditingUser((p) => (p ? { ...p, role: v } : null))
+                          value={editingUser.status}
+                          onValueChange={(v: 'Ativo' | 'Inativo') =>
+                            setEditingUser((p) => (p ? { ...p, status: v } : null))
                           }
                         >
                           <SelectTrigger className="bg-white">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Master">Master</SelectItem>
-                            <SelectItem value="Administrador">Administrador</SelectItem>
-                            <SelectItem value="Professor">Professor</SelectItem>
-                            <SelectItem value="Aluno">Aluno</SelectItem>
-                            <SelectItem value="Responsável">Responsável</SelectItem>
+                            <SelectItem value="Ativo">Ativo</SelectItem>
+                            <SelectItem value="Inativo">Inativo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Endereço Completo</Label>
-                      <Textarea
-                        value={editingUser.address}
-                        onChange={(e) =>
-                          setEditingUser((p) => (p ? { ...p, address: e.target.value } : null))
-                        }
-                        className="bg-white resize-none"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Status da Conta</Label>
-                      <Select
-                        value={editingUser.status}
-                        onValueChange={(v: 'Ativo' | 'Inativo') =>
-                          setEditingUser((p) => (p ? { ...p, status: v } : null))
-                        }
-                      >
-                        <SelectTrigger className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Ativo">Ativo</SelectItem>
-                          <SelectItem value="Inativo">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
 
@@ -432,11 +469,13 @@ export default function TabUsers() {
                 </TabsContent>
 
                 <TabsContent value="photo" className="focus-visible:outline-none h-full">
-                  <PhotoEditor
-                    initialImage={selectedUser.photo}
-                    onSave={(img) => handleSavePhoto(selectedUser.id, img)}
-                    onCancel={() => setIsSheetOpen(false)}
-                  />
+                  {activeTab === 'photo' && (
+                    <PhotoEditor
+                      initialImage={editingUser.photo}
+                      onSave={(img) => handleSavePhoto(selectedUser.id, img)}
+                      onCancel={() => setActiveTab('details')}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
