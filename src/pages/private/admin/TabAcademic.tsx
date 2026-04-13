@@ -1,158 +1,117 @@
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { toast } from 'sonner'
-import { BookOpen, Map, Users, Layers } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AcademicProvider } from './academic/AcademicContext'
+import { TabCursos, TabSetores, TabTurnos } from './academic/AcademicBasics'
+import { TabSeries, TabTurmas } from './academic/AcademicAssociations'
+import { TabSalas } from './academic/TabSalas'
+import { TabMatriculas } from './academic/TabMatriculas'
+import { TabAuditoriaLocal } from './academic/TabAuditoriaLocal'
+import { GraduationCap } from 'lucide-react'
 
 export default function TabAcademic() {
-  const [sector1, setSector1] = useState('')
-  const [shift1, setShift1] = useState('')
-  const [sector2, setSector2] = useState('')
-  const [shift2, setShift2] = useState('')
-
-  const handleEnroll = () => {
-    if (!sector1 || !shift1) {
-      toast.error('Preencha o primeiro setor e turno.')
-      return
-    }
-    if (sector2) {
-      if (!shift2) {
-        toast.error('Preencha o turno do segundo setor.')
-        return
-      }
-      if (shift1 === shift2) {
-        toast.error(
-          'Regra violada: O aluno não pode estar matriculado em dois setores no mesmo turno.',
-        )
-        return
-      }
-    }
-    toast.success('Matrícula acadêmica validada e salva com sucesso!')
-  }
-
   return (
-    <div className="space-y-6 animate-fade-in pt-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { title: 'Cursos & Setores', icon: Map, value: '4 Setores' },
-          { title: 'Séries & Turmas', icon: Users, value: '42 Turmas' },
-          { title: 'Disciplinas & Frentes', icon: BookOpen, value: '18 Disciplinas' },
-        ].map((item, i) => (
-          <Card key={i} className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-              <item.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{item.value}</div>
-              <Button variant="link" className="px-0 h-auto text-xs text-primary">
-                Gerenciar Estrutura
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+    <AcademicProvider>
+      <div className="animate-fade-in pt-4">
+        <div className="mb-6 pb-4 border-b">
+          <h2 className="text-xl font-bold text-blue-950 flex items-center gap-2">
+            <GraduationCap className="h-6 w-6 text-amber-500" />
+            Gestão Acadêmica
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Organize os cursos, setores, turnos, turmas e estruture as salas de aula.
+          </p>
+        </div>
+
+        <Tabs defaultValue="cursos" className="w-full flex flex-col md:flex-row gap-6">
+          <TabsList className="flex flex-col h-auto w-full md:w-56 justify-start gap-1 p-2 bg-slate-50 border border-slate-200 rounded-xl items-stretch shrink-0 shadow-sm">
+            <h3 className="px-3 py-2 text-xs font-bold text-blue-950/70 uppercase tracking-wider">
+              Estrutura Básica
+            </h3>
+            <TabsTrigger
+              value="cursos"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Cursos
+            </TabsTrigger>
+            <TabsTrigger
+              value="setores"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Setores Pedagógicos
+            </TabsTrigger>
+            <TabsTrigger
+              value="series"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Séries
+            </TabsTrigger>
+            <TabsTrigger
+              value="turnos"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Turnos
+            </TabsTrigger>
+            <TabsTrigger
+              value="turmas"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Turmas
+            </TabsTrigger>
+
+            <h3 className="px-3 py-2 mt-3 text-xs font-bold text-blue-950/70 uppercase tracking-wider border-t pt-4">
+              Operações
+            </h3>
+            <TabsTrigger
+              value="salas"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Salas (Builder)
+            </TabsTrigger>
+            <TabsTrigger
+              value="matriculas"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Regras de Matrícula
+            </TabsTrigger>
+
+            <h3 className="px-3 py-2 mt-3 text-xs font-bold text-blue-950/70 uppercase tracking-wider border-t pt-4">
+              Sistema
+            </h3>
+            <TabsTrigger
+              value="auditoria"
+              className="justify-start data-[state=active]:bg-white data-[state=active]:text-blue-950 data-[state=active]:shadow-sm"
+            >
+              Auditoria
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex-1 min-w-0">
+            <TabsContent value="cursos" className="m-0 focus-visible:ring-0">
+              <TabCursos />
+            </TabsContent>
+            <TabsContent value="setores" className="m-0 focus-visible:ring-0">
+              <TabSetores />
+            </TabsContent>
+            <TabsContent value="series" className="m-0 focus-visible:ring-0">
+              <TabSeries />
+            </TabsContent>
+            <TabsContent value="turnos" className="m-0 focus-visible:ring-0">
+              <TabTurnos />
+            </TabsContent>
+            <TabsContent value="turmas" className="m-0 focus-visible:ring-0">
+              <TabTurmas />
+            </TabsContent>
+            <TabsContent value="salas" className="m-0 focus-visible:ring-0">
+              <TabSalas />
+            </TabsContent>
+            <TabsContent value="matriculas" className="m-0 focus-visible:ring-0">
+              <TabMatriculas />
+            </TabsContent>
+            <TabsContent value="auditoria" className="m-0 focus-visible:ring-0">
+              <TabAuditoriaLocal />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
-
-      <Card className="border-t-4 border-t-primary shadow-sm">
-        <CardHeader>
-          <CardTitle>Lógica de Matrícula e Associação</CardTitle>
-          <CardDescription>
-            Matricule um aluno em trilhas acadêmicas. O sistema permite vínculo a dois setores
-            pedagógicos distintos apenas se os turnos (Shifts) forem diferentes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2 max-w-md">
-            <Label>Selecione o Aluno</Label>
-            <Select defaultValue="lucas">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lucas">Lucas Costa (Matrícula: 2026001)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border rounded-xl bg-slate-50">
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm flex items-center gap-2 text-slate-800">
-                <Layers className="w-4 h-4 text-primary" /> Setor Pedagógico Principal
-              </h4>
-              <div className="space-y-2">
-                <Label>Setor / Curso</Label>
-                <Select value={sector1} onValueChange={setSector1}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regular">Ensino Médio Regular</SelectItem>
-                    <SelectItem value="bilingue">Programa Bilíngue</SelectItem>
-                    <SelectItem value="tecnico">Ensino Técnico</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Turno (Shift)</Label>
-                <Select value={shift1} onValueChange={setShift1}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="matutino">Matutino</SelectItem>
-                    <SelectItem value="vespertino">Vespertino</SelectItem>
-                    <SelectItem value="noturno">Noturno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm flex items-center gap-2 text-slate-800">
-                <Layers className="w-4 h-4 text-primary" /> Setor Pedagógico Secundário (Opcional)
-              </h4>
-              <div className="space-y-2">
-                <Label>Setor / Curso</Label>
-                <Select value={sector2} onValueChange={setSector2}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Nenhum (Opcional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regular">Ensino Médio Regular</SelectItem>
-                    <SelectItem value="bilingue">Programa Bilíngue</SelectItem>
-                    <SelectItem value="tecnico">Ensino Técnico</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Turno (Shift)</Label>
-                <Select value={shift2} onValueChange={setShift2}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="matutino">Matutino</SelectItem>
-                    <SelectItem value="vespertino">Vespertino</SelectItem>
-                    <SelectItem value="noturno">Noturno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={handleEnroll} className="w-full md:w-auto">
-            Validar e Salvar Matrícula
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    </AcademicProvider>
   )
 }
