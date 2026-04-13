@@ -7,6 +7,8 @@ import TabMission from './TabMission'
 import TabCycles from './TabCycles'
 import TabPartners from './TabPartners'
 import TabUsers from './TabUsers'
+import TabAcademic from './TabAcademic'
+import TabAudit from './TabAudit'
 
 export default function AdminDashboard() {
   return (
@@ -24,25 +26,34 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="flex flex-wrap h-auto w-full max-w-4xl justify-start gap-1 p-1 bg-muted rounded-xl">
-          <TabsTrigger value="users" className="flex-1 min-w-[120px] rounded-lg">
+        <TabsList className="flex flex-wrap h-auto w-full max-w-5xl justify-start gap-1 p-1 bg-muted rounded-xl">
+          <TabsTrigger value="users" className="flex-1 min-w-[100px] rounded-lg">
             Usuários
           </TabsTrigger>
-          <TabsTrigger value="hero" className="flex-1 min-w-[120px] rounded-lg">
+          <TabsTrigger value="academic" className="flex-1 min-w-[100px] rounded-lg">
+            Acadêmico
+          </TabsTrigger>
+          <TabsTrigger value="hero" className="flex-1 min-w-[100px] rounded-lg">
             Banners
           </TabsTrigger>
-          <TabsTrigger value="mission" className="flex-1 min-w-[120px] rounded-lg">
+          <TabsTrigger value="mission" className="flex-1 min-w-[100px] rounded-lg">
             Missão
           </TabsTrigger>
-          <TabsTrigger value="cycles" className="flex-1 min-w-[120px] rounded-lg">
+          <TabsTrigger value="cycles" className="flex-1 min-w-[100px] rounded-lg">
             Ciclos
           </TabsTrigger>
-          <TabsTrigger value="partners" className="flex-1 min-w-[120px] rounded-lg">
+          <TabsTrigger value="partners" className="flex-1 min-w-[100px] rounded-lg">
             Parceiros
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex-1 min-w-[100px] rounded-lg">
+            Auditoria
           </TabsTrigger>
         </TabsList>
         <TabsContent value="users">
           <TabUsers />
+        </TabsContent>
+        <TabsContent value="academic">
+          <TabAcademic />
         </TabsContent>
         <TabsContent value="hero">
           <TabHero />
@@ -55,6 +66,9 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="partners">
           <TabPartners />
+        </TabsContent>
+        <TabsContent value="audit">
+          <TabAudit />
         </TabsContent>
       </Tabs>
     </div>

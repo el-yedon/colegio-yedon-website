@@ -11,6 +11,7 @@ import {
   Video,
   MessageSquare,
   CreditCard,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -29,12 +30,12 @@ import {
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/stores/useAuthStore'
+import { useAuthStore, UserRole } from '@/stores/useAuthStore'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 export default function PrivateLayout() {
-  const { user, logout, isAuthenticated } = useAuthStore()
+  const { user, logout, isAuthenticated, login } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -45,7 +46,12 @@ export default function PrivateLayout() {
   }, [isAuthenticated, navigate])
 
   useEffect(() => {
-    if (user && location.pathname.startsWith('/app/admin') && user.role !== 'admin') {
+    const isManagement =
+      user?.role === 'admin' ||
+      user?.role === 'master' ||
+      user?.role === 'director' ||
+      user?.role === 'coordinator'
+    if (user && location.pathname.startsWith('/app/admin') && !isManagement) {
       navigate('/app')
     }
   }, [user, location, navigate])
@@ -76,8 +82,16 @@ export default function PrivateLayout() {
       ]
     }
 
-    if (user.role === 'admin') {
-      return [{ title: 'Gestão CMS', url: '/app/admin', icon: Settings }, ...baseItems]
+    if (
+      user.role === 'master' ||
+      user.role === 'director' ||
+      user.role === 'coordinator' ||
+      user.role === 'admin'
+    ) {
+      return [
+        { title: 'Gestão Acadêmica & CMS', url: '/app/admin', icon: ShieldCheck },
+        ...baseItems,
+      ]
     }
 
     return baseItems
@@ -86,6 +100,11 @@ export default function PrivateLayout() {
   const handleLogout = () => {
     logout()
     navigate('/')
+  }
+
+  const handleRoleSimulation = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRole = e.target.value as UserRole
+    login({ ...user, role: newRole })
   }
 
   return (
@@ -152,20 +171,31 @@ export default function PrivateLayout() {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div className="hidden md:flex items-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Bem-vindo de volta,</span>&nbsp;
+                <span className="font-medium text-foreground">Bem-vindo(a),</span>&nbsp;
                 {user.name.split(' ')[0]}
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="relative hidden sm:block w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Buscar no portal..."
-                  className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                />
+              <div className="hidden sm:flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-md">
+                <span className="text-xs font-semibold text-yellow-800">Simular Papel (RBAC):</span>
+                <select
+                  className="h-7 text-xs border-0 bg-transparent font-medium text-yellow-900 focus:ring-0 cursor-pointer outline-none"
+                  value={user.role || ''}
+                  onChange={handleRoleSimulation}
+                >
+                  <option value="master">Master</option>
+                  <option value="director">Diretor</option>
+                  <option value="coordinator">Coordenador</option>
+                  <option value="teacher">Professor</option>
+                  <option value="parent">Responsável</option>
+                  <option value="student">Aluno</option>
+                </select>
               </div>
-              <Button variant="outline" size="icon" className="relative h-9 w-9 rounded-full">
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative h-9 w-9 rounded-full shrink-0"
+              >
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
               </Button>

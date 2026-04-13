@@ -121,8 +121,9 @@ export default function TabUsers() {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
   const [currentUserRole, setCurrentUserRole] = useState('Master')
+  const [deletePassword, setDeletePassword] = useState('')
 
-  const hasAccess = currentUserRole === 'Master' || currentUserRole === 'Administrador'
+  const hasAccess = ['Master', 'Diretor', 'Coordenador', 'Administrador'].includes(currentUserRole)
   const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -146,9 +147,14 @@ export default function TabUsers() {
 
   const handleDeleteUser = () => {
     if (!selectedUser) return
+    if (deletePassword !== 'yedon123') {
+      toast.error('Senha de autorização incorreta.')
+      return
+    }
     setUsers(users.filter((u) => u.id !== selectedUser.id))
     toast.success('Usuário excluído permanentemente.')
     setIsSheetOpen(false)
+    setDeletePassword('')
   }
 
   const handleSavePhoto = (userId: string, newPhotoUrl: string) => {
@@ -172,8 +178,8 @@ export default function TabUsers() {
             <h3 className="font-semibold text-sm">Controle de Acesso do Diretório</h3>
             <p className="text-xs text-blue-200 mt-0.5">
               {hasAccess
-                ? 'Permissão concedida para gerenciar dados cadastrais e padronizar fotos de identificação.'
-                : 'Acesso negado. Requer nível Master ou Administrador.'}
+                ? 'Permissão concedida para gerenciar dados cadastrais. Ações críticas exigem senha.'
+                : 'Acesso negado. Requer nível Master, Diretor ou Coordenador.'}
             </p>
           </div>
         </div>
@@ -188,7 +194,8 @@ export default function TabUsers() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Master">Master</SelectItem>
-              <SelectItem value="Administrador">Administrador</SelectItem>
+              <SelectItem value="Diretor">Diretor</SelectItem>
+              <SelectItem value="Coordenador">Coordenador</SelectItem>
               <SelectItem value="Professor">Professor</SelectItem>
               <SelectItem value="Aluno">Aluno</SelectItem>
             </SelectContent>
@@ -201,8 +208,8 @@ export default function TabUsers() {
           <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
           <h3 className="text-lg font-semibold text-blue-950">Acesso Restrito</h3>
           <p className="text-muted-foreground max-w-md mt-2 text-sm">
-            Apenas usuários com nível <strong>Master</strong> ou <strong>Administrador</strong> têm
-            permissão para visualizar e editar o diretório de usuários.
+            Apenas usuários de gestão (<strong>Master, Diretor, Coordenador</strong>) têm permissão
+            para visualizar e editar o diretório de usuários.
           </p>
         </div>
       ) : (
@@ -442,12 +449,24 @@ export default function TabUsers() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmação de Exclusão</AlertDialogTitle>
+                          <AlertDialogTitle>Autorização Necessária</AlertDialogTitle>
                           <AlertDialogDescription>
                             Esta ação é irreversível. Todos os dados cadastrais do usuário{' '}
                             <strong>{selectedUser.name}</strong> serão permanentemente removidos.
+                            <br />
+                            <br />
+                            Por motivos de segurança, insira sua senha de autorização (dica:
+                            yedon123):
                           </AlertDialogDescription>
                         </AlertDialogHeader>
+                        <div className="py-4">
+                          <Input
+                            type="password"
+                            placeholder="Senha de autorização"
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                          />
+                        </div>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction

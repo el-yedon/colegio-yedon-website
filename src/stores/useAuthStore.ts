@@ -1,12 +1,21 @@
 import { create } from 'zustand'
 
-export type UserRole = 'admin' | 'teacher' | 'parent' | 'student' | null
+export type UserRole =
+  | 'admin'
+  | 'master'
+  | 'director'
+  | 'coordinator'
+  | 'teacher'
+  | 'parent'
+  | 'student'
+  | null
 
-interface User {
+export interface User {
   name: string
   email: string
   role: UserRole
   avatar?: string
+  childrenIds?: string[]
 }
 
 interface AuthState {

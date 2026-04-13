@@ -6,11 +6,17 @@ import {
   CheckCircle2,
   TrendingUp,
   Clock,
+  Users,
+  Building,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user)
+
+  const isManagement = ['master', 'director', 'coordinator', 'admin'].includes(user?.role || '')
+  const isTeacher = user?.role === 'teacher'
+  const isStudentOrParent = user?.role === 'student' || user?.role === 'parent'
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -20,8 +26,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Widgets dependentes do papel */}
-        {user?.role === 'student' || user?.role === 'parent' ? (
+        {isStudentOrParent && (
           <>
             <Card className="border-l-4 border-l-blue-500 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -44,7 +49,9 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </>
-        ) : (
+        )}
+
+        {isTeacher && (
           <>
             <Card className="border-l-4 border-l-purple-500 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -68,6 +75,37 @@ export default function Dashboard() {
             </Card>
           </>
         )}
+
+        {isManagement && (
+          <>
+            <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Turmas Ativas</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-800">
+                  {user?.role === 'coordinator' ? '12' : '42'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {user?.role === 'coordinator' ? 'Na sua coordenação' : 'Em toda a instituição'}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-rose-500 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Setores Pedagógicos</CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-800">4</div>
+                <p className="text-xs text-muted-foreground">
+                  Regular, Bilíngue, Técnico, Integral
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -82,8 +120,8 @@ export default function Dashboard() {
             <div className="space-y-4">
               {[
                 { date: '15/11', title: 'Feriado: Proclamação da República', type: 'Evento' },
-                { date: '20/11', title: 'Prova Bimestral de Matemática', type: 'Avaliação' },
-                { date: '25/11', title: 'Entrega do Projeto de Ciências', type: 'Trabalho' },
+                { date: '20/11', title: 'Reunião de Pais e Mestres', type: 'Institucional' },
+                { date: '25/11', title: 'Conselho de Classe', type: 'Acadêmico' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center p-3 rounded-lg border bg-slate-50/50">
                   <div className="bg-primary/10 text-primary px-3 py-2 rounded-md font-bold text-sm text-center min-w-[70px]">
