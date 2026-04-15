@@ -14,6 +14,9 @@ import Dashboard from './pages/private/Dashboard'
 import Profile from './pages/private/Profile'
 import EAD from './pages/private/EAD'
 import Grades from './pages/private/Grades'
+import Financial from './pages/private/Financial'
+import Marketplace from './pages/private/Marketplace'
+import Inbox from './pages/private/Inbox'
 import AdminDashboard from './pages/private/admin/AdminDashboard'
 
 const App = () => (
@@ -62,22 +65,9 @@ const App = () => (
           <Route path="profile" element={<Profile />} />
           <Route path="ead" element={<EAD />} />
           <Route path="grades" element={<Grades />} />
-          <Route
-            path="financial"
-            element={
-              <div className="p-8 text-center text-muted-foreground">
-                Módulo Financeiro em desenvolvimento
-              </div>
-            }
-          />
-          <Route
-            path="inbox"
-            element={
-              <div className="p-8 text-center text-muted-foreground">
-                Caixa de Entrada em desenvolvimento
-              </div>
-            }
-          />
+          <Route path="financial" element={<Financial />} />
+          <Route path="inbox" element={<Inbox />} />
+          <Route path="marketplace" element={<Marketplace />} />
           <Route path="admin" element={<AdminDashboard />} />
         </Route>
 

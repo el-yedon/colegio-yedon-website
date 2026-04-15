@@ -12,6 +12,7 @@ import {
   MessageSquare,
   CreditCard,
   ShieldCheck,
+  Store,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -71,14 +72,15 @@ export default function PrivateLayout() {
         { title: 'EAD Hub', url: '/app/ead', icon: Video },
         { title: 'Boletim & Notas', url: '/app/grades', icon: FileText },
         { title: 'Financeiro', url: '/app/financial', icon: CreditCard },
+        { title: 'Cursos Extras', url: '/app/marketplace', icon: Store },
       ]
     }
 
     if (user.role === 'teacher') {
       return [
         ...baseItems,
-        { title: 'Lançar Notas', url: '/app/grades', icon: FileText },
-        { title: 'Aulas EAD', url: '/app/ead', icon: Video },
+        { title: 'Gestão de Notas', url: '/app/grades', icon: FileText },
+        { title: 'Virtual Classroom', url: '/app/ead', icon: Video },
       ]
     }
 
