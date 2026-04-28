@@ -294,10 +294,10 @@ END $$;
 DO $$
 DECLARE
   v_course_id UUID := 'c0000000-0000-0000-0000-000000000001'::uuid;
-  v_sector_id UUID := 's0000000-0000-0000-0000-000000000001'::uuid;
-  v_shift_id UUID := 'h0000000-0000-0000-0000-000000000001'::uuid;
-  v_grade_id UUID := 'g0000000-0000-0000-0000-000000000001'::uuid;
-  v_class_id UUID := 't0000000-0000-0000-0000-000000000001'::uuid;
+  v_sector_id UUID := 'd0000000-0000-0000-0000-000000000001'::uuid;
+  v_shift_id UUID := 'e0000000-0000-0000-0000-000000000001'::uuid;
+  v_grade_id UUID := 'f0000000-0000-0000-0000-000000000001'::uuid;
+  v_class_id UUID := 'a0000000-0000-0000-0000-000000000001'::uuid;
   v_student_id UUID;
   v_parent_id UUID;
 BEGIN
