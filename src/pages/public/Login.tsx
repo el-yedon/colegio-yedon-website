@@ -7,29 +7,49 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GraduationCap, Lock, Mail } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('Skip@Pass')
-  const { signIn } = useAuth()
+  const [resetEmail, setResetEmail] = useState('')
+  const [isResetting, setIsResetting] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const { signIn, resetPasswordForEmail } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+
+  const navigateBasedOnRole = async () => {
+    const { data: userData } = await supabase.auth.getUser()
+    if (userData.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userData.user.id)
+        .single()
+
+      if (profile && ['admin', 'master', 'director'].includes(profile.role)) {
+        navigate('/app/admin')
+      } else {
+        navigate('/app')
+      }
+    } else {
+      navigate('/app')
+    }
+  }
 
   const handleDemoLogin = async (role: string) => {
     setLoading(true)
     const demoEmail = `${role}@yedon.com.br`
     const { error } = await signIn(demoEmail, 'Skip@Pass')
-    setLoading(false)
 
     if (error) {
+      setLoading(false)
       toast({ title: 'Erro de Autenticação', description: error.message, variant: 'destructive' })
     } else {
-      if (role === 'admin') {
-        navigate('/app/admin')
-      } else {
-        navigate('/app')
-      }
+      await navigateBasedOnRole()
+      setLoading(false)
     }
   }
 
@@ -37,21 +57,40 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     const { error } = await signIn(email, password)
+
+    if (error) {
+      setLoading(false)
+      toast({
+        title: 'Erro de Autenticação',
+        description: 'Credenciais inválidas. Verifique seu email e senha.',
+        variant: 'destructive',
+      })
+    } else {
+      await navigateBasedOnRole()
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail) return
+
+    setLoading(true)
+    const { error } = await resetPasswordForEmail(resetEmail)
     setLoading(false)
 
     if (error) {
       toast({
-        title: 'Erro de Autenticação',
-        description: 'Credenciais inválidas. Tente usar os botões de Acesso Rápido abaixo.',
+        title: 'Erro ao enviar email',
+        description: error.message,
         variant: 'destructive',
       })
     } else {
-      // Simple routing based on admin presence in email for demo
-      if (email.includes('admin') || email.includes('eledir')) {
-        navigate('/app/admin')
-      } else {
-        navigate('/app')
-      }
+      toast({
+        title: 'Email enviado',
+        description: 'Se o email estiver cadastrado, você receberá um link para redefinir a senha.',
+      })
+      setIsResetting(false)
     }
   }
 
@@ -68,101 +107,145 @@ export default function Login() {
 
         <Card className="border-t-4 border-t-secondary shadow-xl">
           <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Insira suas credenciais para acessar o sistema.</CardDescription>
+            <CardTitle>{isResetting ? 'Recuperar Senha' : 'Login'}</CardTitle>
+            <CardDescription>
+              {isResetting
+                ? 'Informe seu email para receber um link de redefinição.'
+                : 'Insira suas credenciais para acessar o sistema.'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email ou Matrícula</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    type="text"
-                    placeholder="exemplo@email.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+            {isResetting ? (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email Cadastrado</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="exemplo@email.com"
+                      className="pl-10"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Senha</Label>
-                  <a href="#" className="text-xs text-primary hover:underline font-medium">
-                    Esqueceu a senha?
-                  </a>
+                <div className="flex flex-col space-y-2 pt-2">
+                  <Button type="submit" disabled={loading} className="w-full h-11 bg-primary">
+                    {loading ? 'Enviando...' : 'Enviar Link'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsResetting(false)}
+                    disabled={loading}
+                    className="h-11"
+                  >
+                    Voltar ao Login
+                  </Button>
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-11 text-base bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {loading ? 'Entrando...' : 'Entrar no Portal'}
-              </Button>
-            </form>
+              </form>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email ou Matrícula</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="email"
+                        type="text"
+                        placeholder="exemplo@email.com"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Senha</Label>
+                      <button
+                        type="button"
+                        onClick={() => setIsResetting(true)}
+                        className="text-xs text-primary hover:underline font-medium bg-transparent border-none p-0 cursor-pointer"
+                      >
+                        Esqueceu a senha?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="password"
+                        type="password"
+                        className="pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {loading ? 'Entrando...' : 'Entrar no Portal'}
+                  </Button>
+                </form>
 
-            <div className="mt-8 pt-6 border-t">
-              <p className="text-xs text-center text-slate-500 mb-4 uppercase tracking-wider font-semibold">
-                Acesso Rápido (Demonstração)
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleDemoLogin('student')}
-                  className="text-xs"
-                >
-                  🧑‍🎓 Aluno
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleDemoLogin('parent')}
-                  className="text-xs"
-                >
-                  👨‍👩‍👧 Responsável
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleDemoLogin('teacher')}
-                  className="text-xs"
-                >
-                  👨‍🏫 Professor
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleDemoLogin('admin')}
-                  className="text-xs"
-                >
-                  ⚙️ Admin
-                </Button>
-              </div>
-            </div>
+                <div className="mt-8 pt-6 border-t">
+                  <p className="text-xs text-center text-slate-500 mb-4 uppercase tracking-wider font-semibold">
+                    Acesso Rápido (Demonstração)
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => handleDemoLogin('student')}
+                      className="text-xs"
+                    >
+                      🧑‍🎓 Aluno
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => handleDemoLogin('parent')}
+                      className="text-xs"
+                    >
+                      👨‍👩‍👧 Responsável
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => handleDemoLogin('teacher')}
+                      className="text-xs"
+                    >
+                      👨‍🏫 Professor
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => handleDemoLogin('admin')}
+                      className="text-xs"
+                    >
+                      ⚙️ Admin
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

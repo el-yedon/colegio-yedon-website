@@ -9,6 +9,7 @@ import PrivateLayout from './components/PrivateLayout'
 
 import Home from './pages/public/Home'
 import Login from './pages/public/Login'
+import UpdatePassword from './pages/public/UpdatePassword'
 import Ciclos from './pages/public/Ciclos'
 
 import Dashboard from './pages/private/Dashboard'
@@ -31,6 +32,7 @@ const App = () => (
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/ciclos" element={<Ciclos />} />
             <Route
               path="/institucional"
