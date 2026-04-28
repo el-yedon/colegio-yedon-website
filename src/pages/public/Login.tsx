@@ -1,42 +1,58 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore, UserRole } from '@/stores/useAuthStore'
+import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GraduationCap, Lock, Mail } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Login() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const login = useAuthStore((state) => state.login)
+  const [password, setPassword] = useState('Skip@Pass')
+  const { signIn } = useAuth()
   const navigate = useNavigate()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
 
-  const handleDemoLogin = (role: UserRole) => {
-    let name = 'Usuário'
-    if (role === 'admin') name = 'Admin Sistema'
-    if (role === 'teacher') name = 'Prof. Carlos Silva'
-    if (role === 'parent') name = 'Maria Eduarda (Mãe)'
-    if (role === 'student') name = 'João Pedro (Yedon Path)'
+  const handleDemoLogin = async (role: string) => {
+    setLoading(true)
+    const demoEmail = `${role}@yedon.com.br`
+    const { error } = await signIn(demoEmail, 'Skip@Pass')
+    setLoading(false)
 
-    login({
-      name,
-      email: `${role}@yedon.com.br`,
-      role,
-      avatar: `https://img.usecurling.com/ppl/thumbnail?seed=${role}`,
-    })
-    if (role === 'admin') {
-      navigate('/app/admin')
+    if (error) {
+      toast({ title: 'Erro de Autenticação', description: error.message, variant: 'destructive' })
     } else {
-      navigate('/app')
+      if (role === 'admin') {
+        navigate('/app/admin')
+      } else {
+        navigate('/app')
+      }
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock standard login as student for form submission
-    handleDemoLogin('student')
+    setLoading(true)
+    const { error } = await signIn(email, password)
+    setLoading(false)
+
+    if (error) {
+      toast({
+        title: 'Erro de Autenticação',
+        description: 'Credenciais inválidas. Tente usar os botões de Acesso Rápido abaixo.',
+        variant: 'destructive',
+      })
+    } else {
+      // Simple routing based on admin presence in email for demo
+      if (email.includes('admin') || email.includes('eledir')) {
+        navigate('/app/admin')
+      } else {
+        navigate('/app')
+      }
+    }
   }
 
   return (
@@ -93,9 +109,10 @@ export default function Login() {
               </div>
               <Button
                 type="submit"
+                disabled={loading}
                 className="w-full h-11 text-base bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                Entrar no Portal
+                {loading ? 'Entrando...' : 'Entrar no Portal'}
               </Button>
             </form>
 
@@ -105,32 +122,40 @@ export default function Login() {
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={loading}
                   onClick={() => handleDemoLogin('student')}
                   className="text-xs"
                 >
                   🧑‍🎓 Aluno
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={loading}
                   onClick={() => handleDemoLogin('parent')}
                   className="text-xs"
                 >
                   👨‍👩‍👧 Responsável
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={loading}
                   onClick={() => handleDemoLogin('teacher')}
                   className="text-xs"
                 >
                   👨‍🏫 Professor
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
+                  disabled={loading}
                   onClick={() => handleDemoLogin('admin')}
                   className="text-xs"
                 >
