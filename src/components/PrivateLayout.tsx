@@ -1,13 +1,11 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import {
-  BookOpen,
   LayoutDashboard,
   Settings,
   LogOut,
   FileText,
   GraduationCap,
   Bell,
-  Search,
   Video,
   MessageSquare,
   CreditCard,
@@ -34,17 +32,19 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore, UserRole } from '@/stores/useAuthStore'
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function PrivateLayout() {
-  const { user, logout, isAuthenticated, login } = useAuthStore()
+  const { user, logout, login } = useAuthStore()
+  const { loading, session, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!loading && !session) {
       navigate('/login')
     }
-  }, [isAuthenticated, navigate])
+  }, [loading, session, navigate])
 
   useEffect(() => {
     const isManagement =
@@ -56,6 +56,14 @@ export default function PrivateLayout() {
       navigate('/app')
     }
   }, [user, location, navigate])
+
+  if (loading || (!user && session)) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   if (!user) return null
 
@@ -99,8 +107,9 @@ export default function PrivateLayout() {
     return baseItems
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     logout()
+    await signOut()
     navigate('/')
   }
 

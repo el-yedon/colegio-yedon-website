@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 interface AuthContextType {
   user: User | null
@@ -41,6 +42,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('perfis')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+        .then(({ data: profile }) => {
+          useAuthStore.getState().login({
+            name: profile?.nome || user.user_metadata?.name || user.email || '',
+            email: user.email || '',
+            role: profile?.papel || user.user_metadata?.role || 'student',
+            avatar: profile?.avatar || user.user_metadata?.avatar,
+          })
+        })
+    } else {
+      useAuthStore.getState().logout()
+    }
+  }, [user])
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({

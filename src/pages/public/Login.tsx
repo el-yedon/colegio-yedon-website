@@ -24,12 +24,12 @@ export default function Login() {
     const { data: userData } = await supabase.auth.getUser()
     if (userData.user) {
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
+        .from('perfis')
+        .select('papel')
         .eq('id', userData.user.id)
         .single()
 
-      if (profile && ['admin', 'master', 'director'].includes(profile.role)) {
+      if (profile && ['admin', 'master', 'director'].includes(profile.papel)) {
         navigate('/app/admin')
       } else {
         navigate('/app')
