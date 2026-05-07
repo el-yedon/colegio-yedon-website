@@ -19,13 +19,13 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name, role, tenant_name: 'Escola' },
+      user_metadata: { name, role, tenant_name: 'Escola' }
     })
 
     if (authError) throw authError
 
     // Aguarda o trigger handle_new_user possivelmente agir
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // 2. Atualiza perfil com os novos campos de pessoa e endereço
     const { error: profileError } = await supabase
@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
         cidade: userData.cidade,
         estado: userData.estado,
         avatar: userData.avatar,
-        papel: role,
+        papel: role
       })
       .eq('id', authData.user.id)
 
@@ -65,9 +65,9 @@ Deno.serve(async (req: Request) => {
         bairro: userData.bairro,
         cidade: userData.cidade,
         estado: userData.estado,
-        avatar: userData.avatar,
+        avatar: userData.avatar
       })
-      if (insertError) throw insertError
+      if(insertError) throw insertError
     }
 
     return new Response(JSON.stringify({ user: authData.user }), {
