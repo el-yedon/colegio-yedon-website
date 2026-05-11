@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -10,48 +11,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/stores/useAuthStore'
 import { Badge } from '@/components/ui/badge'
 import { ShieldAlert } from 'lucide-react'
-
-const AUDIT_LOGS = [
-  {
-    id: 1,
-    userId: 'master@yedon.edu.br',
-    role: 'Master',
-    action: 'DELETE',
-    resource: 'User',
-    description: 'Removeu o usuário juliana@yedon.edu.br',
-    timestamp: '2026-04-04 10:23:45',
-  },
-  {
-    id: 2,
-    userId: 'diretor@yedon.edu.br',
-    role: 'Diretor',
-    action: 'UPDATE',
-    resource: 'Grade',
-    description: 'Alterou nota de Matemática para aluno 2026001',
-    timestamp: '2026-04-03 16:45:12',
-  },
-  {
-    id: 3,
-    userId: 'master@yedon.edu.br',
-    role: 'Master',
-    action: 'CREATE',
-    resource: 'Class',
-    description: 'Criou nova turma: 1ª Série B - Noturno',
-    timestamp: '2026-04-03 14:30:00',
-  },
-  {
-    id: 4,
-    userId: 'admin@yedon.edu.br',
-    role: 'Admin',
-    action: 'UPDATE',
-    resource: 'CMS',
-    description: 'Atualizou o banner da página inicial',
-    timestamp: '2026-04-02 09:15:22',
-  },
-]
+import { supabase } from '@/lib/supabase/client'
 
 export default function TabAudit() {
   const user = useAuthStore((s) => s.user)
+  const [logs, setLogs] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const { data } = await supabase
+        .from('logs_auditoria')
+        .select(`*, perfis(email, papel)`)
+        .order('criado_em', { ascending: false })
+        .limit(100)
+      if (data) setLogs(data)
+    }
+    fetchLogs()
+  }, [])
 
   const isMaster = user?.role === 'master' || user?.role === 'admin'
 
@@ -90,30 +66,41 @@ export default function TabAudit() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {AUDIT_LOGS.map((log) => (
+                {logs.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      Nenhum registro de auditoria encontrado.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
-                      {log.timestamp}
+                      {new Date(log.criado_em).toLocaleString('pt-BR')}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-sm text-slate-800">{log.userId}</div>
-                      <div className="text-xs text-muted-foreground">{log.role}</div>
+                      <div className="font-medium text-sm text-slate-800">
+                        {log.perfis?.email || 'Sistema'}
+                      </div>
+                      <div className="text-xs text-muted-foreground capitalize">
+                        {log.perfis?.papel || ''}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          log.action === 'DELETE'
+                          log.acao === 'DELETE'
                             ? 'destructive'
-                            : log.action === 'CREATE'
+                            : log.acao === 'CREATE'
                               ? 'default'
                               : 'secondary'
                         }
                       >
-                        {log.action}
+                        {log.acao}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{log.resource}</TableCell>
-                    <TableCell className="text-sm text-slate-600">{log.description}</TableCell>
+                    <TableCell className="text-sm font-medium">{log.recurso}</TableCell>
+                    <TableCell className="text-sm text-slate-600">{log.detalhes}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { logAudit } from '@/lib/audit'
 import {
   Table,
   TableBody,
@@ -55,66 +57,8 @@ type User = {
   photo: string
 }
 
-const INITIAL_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Carlos Yedon',
-    email: 'master@yedon.edu.br',
-    phone: '(11) 99999-9999',
-    document: '123.456.789-00',
-    address: 'Av. Paulista, 1000 - SP',
-    role: 'Master',
-    status: 'Ativo',
-    photo: 'https://img.usecurling.com/ppl/medium?gender=male&seed=10',
-  },
-  {
-    id: '2',
-    name: 'Ana Silva',
-    email: 'ana.silva@yedon.edu.br',
-    phone: '(11) 98888-8888',
-    document: '987.654.321-11',
-    address: 'Rua das Flores, 123 - SP',
-    role: 'Administrador',
-    status: 'Ativo',
-    photo: 'https://img.usecurling.com/ppl/medium?gender=female&seed=22',
-  },
-  {
-    id: '3',
-    name: 'Roberto Mendes',
-    email: 'roberto@yedon.edu.br',
-    phone: '(11) 97777-7777',
-    document: '111.222.333-44',
-    address: 'Av. Brasil, 500 - RJ',
-    role: 'Professor',
-    status: 'Ativo',
-    photo: 'https://img.usecurling.com/ppl/medium?gender=male&seed=33',
-  },
-  {
-    id: '4',
-    name: 'Juliana Costa',
-    email: 'juliana@yedon.edu.br',
-    phone: '(11) 96666-6666',
-    document: '555.666.777-88',
-    address: 'Rua do Sol, 89 - MG',
-    role: 'Responsável',
-    status: 'Inativo',
-    photo: '',
-  },
-  {
-    id: '5',
-    name: 'Lucas Costa',
-    email: 'lucas@yedon.edu.br',
-    phone: '(11) 95555-5555',
-    document: '999.888.777-66',
-    address: 'Rua do Sol, 89 - MG',
-    role: 'Aluno',
-    status: 'Ativo',
-    photo: 'https://img.usecurling.com/ppl/medium?gender=male&seed=55',
-  },
-]
-
 export default function TabUsers() {
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS)
+  const [users, setUsers] = useState<User[]>([])
   const [search, setSearch] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -122,6 +66,32 @@ export default function TabUsers() {
   const [activeTab, setActiveTab] = useState('details')
   const [currentUserRole, setCurrentUserRole] = useState('Master')
   const [deletePassword, setDeletePassword] = useState('')
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .from('perfis')
+      .select('*')
+      .order('criado_em', { ascending: false })
+    if (data) {
+      setUsers(
+        data.map((p) => ({
+          id: p.id,
+          name: p.nome,
+          email: p.email,
+          phone: p.telefone || '',
+          document: p.cpf || '',
+          address: p.logradouro || '',
+          role: p.papel,
+          status: (p as any).status || 'Ativo',
+          photo: p.avatar || '',
+        })),
+      )
+    }
+  }
 
   const hasAccess = ['Master', 'Diretor', 'Coordenador', 'Administrador'].includes(currentUserRole)
   const filteredUsers = users.filter(
@@ -137,28 +107,54 @@ export default function TabUsers() {
     setActiveTab('details')
   }
 
-  const handleSaveDetails = () => {
+  const handleSaveDetails = async () => {
     if (!editingUser) return
-    setUsers(users.map((u) => (u.id === editingUser.id ? editingUser : u)))
-    setSelectedUser(editingUser)
+    const { error } = await supabase
+      .from('perfis')
+      .update({
+        nome: editingUser.name,
+        email: editingUser.email,
+        telefone: editingUser.phone,
+        cpf: editingUser.document,
+        logradouro: editingUser.address,
+        papel: editingUser.role,
+        status: editingUser.status,
+      } as any)
+      .eq('id', editingUser.id)
+
+    if (error) {
+      toast.error('Erro ao atualizar cadastro')
+      return
+    }
+
+    await logAudit('UPDATE', 'Usuários', `Perfil de ${editingUser.name} atualizado.`)
     toast.success('Cadastro atualizado com sucesso!')
+    fetchUsers()
     setIsSheetOpen(false)
   }
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser) return
     if (deletePassword !== 'yedon123') {
       toast.error('Senha de autorização incorreta.')
       return
     }
-    setUsers(users.filter((u) => u.id !== selectedUser.id))
+    const { error } = await supabase.from('perfis').delete().eq('id', selectedUser.id)
+    if (error) {
+      toast.error('Erro ao excluir usuário')
+      return
+    }
+    await logAudit('DELETE', 'Usuários', `Perfil de ${selectedUser.name} excluído.`)
     toast.success('Usuário excluído permanentemente.')
+    fetchUsers()
     setIsSheetOpen(false)
     setDeletePassword('')
   }
 
-  const handleSavePhoto = (userId: string, newPhotoUrl: string) => {
-    setUsers(users.map((u) => (u.id === userId ? { ...u, photo: newPhotoUrl } : u)))
+  const handleSavePhoto = async (userId: string, newPhotoUrl: string) => {
+    await supabase.from('perfis').update({ avatar: newPhotoUrl }).eq('id', userId)
+    await logAudit('UPDATE', 'Usuários', `Foto de perfil atualizada.`)
+    fetchUsers()
     if (selectedUser?.id === userId) {
       setSelectedUser((p) => (p ? { ...p, photo: newPhotoUrl } : p))
       setEditingUser((p) => (p ? { ...p, photo: newPhotoUrl } : p))

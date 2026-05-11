@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Layers } from 'lucide-react'
 import { useAcademic } from './AcademicContext'
+import { logAudit } from '@/lib/audit'
 
 export function TabMatriculas() {
   const { state } = useAcademic()
@@ -44,6 +45,12 @@ export function TabMatriculas() {
         return
       }
     }
+
+    logAudit(
+      'CREATE',
+      'Matrículas',
+      `Validação e Matrícula simulada executada para aluno ${studentId}.`,
+    )
     toast.success('Matrícula acadêmica validada com sucesso pelas regras do sistema!')
   }
 
