@@ -1,6 +1,11 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, x-supabase-client-platform, apikey, content-type',
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -19,13 +24,13 @@ Deno.serve(async (req: Request) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name, role, tenant_name: 'Escola' },
+      user_metadata: { name, role, tenant_name: 'Escola' }
     })
 
     if (authError) throw authError
 
     // Aguarda o trigger handle_new_user possivelmente agir
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // 2. Atualiza perfil com os novos campos de pessoa e endereço
     const { error: profileError } = await supabase
@@ -44,6 +49,7 @@ Deno.serve(async (req: Request) => {
         estado: userData.estado,
         avatar: userData.avatar,
         papel: role,
+        precisa_trocar_senha: true
       })
       .eq('id', authData.user.id)
 
@@ -66,8 +72,9 @@ Deno.serve(async (req: Request) => {
         cidade: userData.cidade,
         estado: userData.estado,
         avatar: userData.avatar,
+        precisa_trocar_senha: true
       })
-      if (insertError) throw insertError
+      if(insertError) throw insertError
     }
 
     return new Response(JSON.stringify({ user: authData.user }), {
