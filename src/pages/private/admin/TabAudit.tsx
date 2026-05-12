@@ -21,7 +21,7 @@ export default function TabAudit() {
     const fetchLogs = async () => {
       const { data } = await supabase
         .from('logs_auditoria')
-        .select(`*, perfis(email, papel)`)
+        .select(`*, perfis(nome, papel)`)
         .order('criado_em', { ascending: false })
         .limit(100)
       if (data) setLogs(data)
@@ -80,7 +80,7 @@ export default function TabAudit() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-sm text-slate-800">
-                        {log.perfis?.email || 'Sistema'}
+                        {log.perfis?.nome || 'Sistema'}
                       </div>
                       <div className="text-xs text-muted-foreground capitalize">
                         {log.perfis?.papel || ''}

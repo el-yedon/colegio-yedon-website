@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Search, Edit2, ShieldAlert, Lock, Image as ImageIcon } from 'lucide-react'
+import { Search, Edit2, ShieldAlert, Lock, Image as ImageIcon, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import PhotoEditor from '@/components/PhotoEditor'
 
@@ -57,6 +57,26 @@ type User = {
   photo: string
 }
 
+const roleMapToDb: Record<string, string> = {
+  Master: 'master',
+  Administrador: 'admin',
+  Diretor: 'director',
+  Coordenador: 'coordinator',
+  Professor: 'teacher',
+  Aluno: 'student',
+  Responsável: 'parent',
+}
+
+const roleMapFromDb: Record<string, string> = {
+  master: 'Master',
+  admin: 'Administrador',
+  director: 'Diretor',
+  coordinator: 'Coordenador',
+  teacher: 'Professor',
+  student: 'Aluno',
+  parent: 'Responsável',
+}
+
 export default function TabUsers() {
   const [users, setUsers] = useState<User[]>([])
   const [search, setSearch] = useState('')
@@ -66,6 +86,18 @@ export default function TabUsers() {
   const [activeTab, setActiveTab] = useState('details')
   const [currentUserRole, setCurrentUserRole] = useState('Master')
   const [deletePassword, setDeletePassword] = useState('')
+
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'Aluno',
+    phone: '',
+    document: '',
+    address: '',
+  })
 
   useEffect(() => {
     fetchUsers()
@@ -85,7 +117,7 @@ export default function TabUsers() {
           phone: p.telefone || '',
           document: p.cpf || '',
           address: p.logradouro || '',
-          role: p.papel,
+          role: roleMapFromDb[p.papel] || p.papel,
           status: (p as any).status || 'Ativo',
           photo: p.avatar || '',
         })),
@@ -117,7 +149,7 @@ export default function TabUsers() {
         telefone: editingUser.phone,
         cpf: editingUser.document,
         logradouro: editingUser.address,
-        papel: editingUser.role,
+        papel: roleMapToDb[editingUser.role] || editingUser.role,
         status: editingUser.status,
       } as any)
       .eq('id', editingUser.id)
@@ -161,6 +193,64 @@ export default function TabUsers() {
     }
     toast.success('Foto atualizada com sucesso!')
     setActiveTab('details')
+  }
+
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      toast.error('Preencha os campos obrigatórios (Nome, Email, Senha).')
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser()
+      if (!authUser) throw new Error('Não autenticado')
+
+      const { data: profile } = await supabase
+        .from('perfis')
+        .select('escola_id')
+        .eq('id', authUser.id)
+        .single()
+
+      const tenantId = profile?.escola_id
+
+      const res = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUser.email,
+          password: newUser.password,
+          name: newUser.name,
+          role: roleMapToDb[newUser.role] || newUser.role,
+          tenantId,
+          userData: {
+            cpf: newUser.document,
+            telefone: newUser.phone,
+            logradouro: newUser.address,
+          },
+        },
+      })
+
+      if (res.error) throw new Error(res.error.message || 'Erro ao criar usuário')
+
+      await logAudit('CREATE', 'Usuários', `Novo usuário ${newUser.name} criado.`)
+      toast.success('Usuário criado com sucesso!')
+      setIsCreateSheetOpen(false)
+      fetchUsers()
+      setNewUser({
+        name: '',
+        email: '',
+        password: '',
+        role: 'Aluno',
+        phone: '',
+        document: '',
+        address: '',
+      })
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao criar usuário')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -210,14 +300,22 @@ export default function TabUsers() {
         </div>
       ) : (
         <div className="space-y-4 animate-fade-in">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome ou email..."
-              className="pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                className="pl-9 w-full"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button
+              className="bg-blue-950 text-yellow-500 hover:bg-blue-900 w-full sm:w-auto"
+              onClick={() => setIsCreateSheetOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Novo Usuário
+            </Button>
           </div>
 
           <div className="border rounded-xl bg-card overflow-hidden">
@@ -231,51 +329,168 @@ export default function TabUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="flex items-center gap-3 py-4">
-                      <Avatar className="h-10 w-10 border shadow-sm rounded-md">
-                        <AvatarImage src={user.photo} className="object-cover" />
-                        <AvatarFallback className="rounded-md bg-blue-50 text-blue-950 font-semibold">
-                          {user.name.substring(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{user.name}</span>
-                        <span className="text-xs text-muted-foreground">{user.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-slate-50">
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={user.status === 'Ativo' ? 'default' : 'secondary'}
-                        className={user.status === 'Ativo' ? 'bg-green-600 hover:bg-green-700' : ''}
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        onClick={() => openEdit(user)}
-                      >
-                        <Edit2 className="w-4 h-4 mr-2" /> Gerenciar
-                      </Button>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      Nenhum usuário encontrado.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="flex items-center gap-3 py-4">
+                        <Avatar className="h-10 w-10 border shadow-sm rounded-md">
+                          <AvatarImage src={user.photo} className="object-cover" />
+                          <AvatarFallback className="rounded-md bg-blue-50 text-blue-950 font-semibold">
+                            {user.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.name}</span>
+                          <span className="text-xs text-muted-foreground">{user.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-slate-50">
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={user.status === 'Ativo' ? 'default' : 'secondary'}
+                          className={
+                            user.status === 'Ativo' ? 'bg-green-600 hover:bg-green-700' : ''
+                          }
+                        >
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          onClick={() => openEdit(user)}
+                        >
+                          <Edit2 className="w-4 h-4 mr-2" /> Gerenciar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </div>
       )}
 
+      {/* Sheet para Criar Novo Usuário */}
+      <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
+        <SheetContent className="sm:max-w-xl w-full overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-2xl text-blue-950">Novo Usuário</SheetTitle>
+            <SheetDescription>
+              Preencha os dados abaixo para cadastrar um novo usuário no sistema.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome Completo *</Label>
+              <Input
+                value={newUser.name}
+                onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))}
+                placeholder="Ex: João da Silva"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))}
+                  placeholder="joao@exemplo.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Senha Temporária *</Label>
+                <Input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser((p) => ({ ...p, phone: e.target.value }))}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Documento (CPF/RG)</Label>
+                <Input
+                  value={newUser.document}
+                  onChange={(e) => setNewUser((p) => ({ ...p, document: e.target.value }))}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Nível de Acesso *</Label>
+              <Select
+                value={newUser.role}
+                onValueChange={(v) => setNewUser((p) => ({ ...p, role: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Master">Master</SelectItem>
+                  <SelectItem value="Administrador">Administrador</SelectItem>
+                  <SelectItem value="Diretor">Diretor</SelectItem>
+                  <SelectItem value="Coordenador">Coordenador</SelectItem>
+                  <SelectItem value="Professor">Professor</SelectItem>
+                  <SelectItem value="Aluno">Aluno</SelectItem>
+                  <SelectItem value="Responsável">Responsável</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Endereço Completo</Label>
+              <Textarea
+                value={newUser.address}
+                onChange={(e) => setNewUser((p) => ({ ...p, address: e.target.value }))}
+                rows={2}
+                placeholder="Rua, Número, Bairro, Cidade - UF"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateSheetOpen(false)}
+                disabled={isCreating}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="bg-blue-950 text-yellow-500 hover:bg-blue-900"
+                onClick={handleCreateUser}
+                disabled={isCreating}
+              >
+                {isCreating ? 'Criando...' : 'Criar Usuário'}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Sheet de Edição de Usuário */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="sm:max-w-2xl w-full overflow-y-auto p-0 flex flex-col">
           <div className="p-6 border-b bg-muted/20">
@@ -395,6 +610,8 @@ export default function TabUsers() {
                             <SelectContent>
                               <SelectItem value="Master">Master</SelectItem>
                               <SelectItem value="Administrador">Administrador</SelectItem>
+                              <SelectItem value="Diretor">Diretor</SelectItem>
+                              <SelectItem value="Coordenador">Coordenador</SelectItem>
                               <SelectItem value="Professor">Professor</SelectItem>
                               <SelectItem value="Aluno">Aluno</SelectItem>
                               <SelectItem value="Responsável">Responsável</SelectItem>
