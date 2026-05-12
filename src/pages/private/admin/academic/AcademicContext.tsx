@@ -148,15 +148,13 @@ export function AcademicProvider({ children }: { children: ReactNode }) {
     const toRemove = existingIds.filter((id: string) => !classroom.students.includes(id))
 
     if (toAdd.length > 0) {
-      await supabase
-        .from('matriculas')
-        .insert(
-          toAdd.map((id: string) => ({
-            aluno_id: id,
-            turma_id: classroom.classId,
-            status: 'active',
-          })),
-        )
+      await supabase.from('matriculas').insert(
+        toAdd.map((id: string) => ({
+          aluno_id: id,
+          turma_id: classroom.classId,
+          status: 'active',
+        })),
+      )
     }
     if (toRemove.length > 0) {
       await supabase
