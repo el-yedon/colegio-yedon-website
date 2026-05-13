@@ -241,6 +241,15 @@ export default function PrivateLayout() {
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
             </div>
           </header>
           <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
