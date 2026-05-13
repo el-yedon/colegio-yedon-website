@@ -201,6 +201,14 @@ export default function TabUsers() {
       return
     }
 
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{6,}$/
+    if (!passwordRegex.test(newUser.password)) {
+      toast.error(
+        'A senha deve ter no mínimo 6 caracteres, contendo letras, números e caracteres especiais (@, &, ., %, etc).',
+      )
+      return
+    }
+
     setIsCreating(true)
     try {
       const {
@@ -419,8 +427,12 @@ export default function TabUsers() {
                   type="password"
                   value={newUser.password}
                   onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Letras, números e especial (@,&,.)"
                 />
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Mín. 6 caracteres (letras, números e especial). O usuário será forçado a trocá-la
+                  no primeiro acesso.
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

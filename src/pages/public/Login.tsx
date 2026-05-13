@@ -25,9 +25,14 @@ export default function Login() {
     if (userData.user) {
       const { data: profile } = await supabase
         .from('perfis')
-        .select('papel')
+        .select('papel, precisa_trocar_senha')
         .eq('id', userData.user.id)
         .single()
+
+      if (profile?.precisa_trocar_senha) {
+        navigate('/update-password')
+        return
+      }
 
       if (profile && ['admin', 'master', 'director'].includes(profile.papel)) {
         navigate('/app/admin')
