@@ -113,6 +113,37 @@ export default function PrivateLayout() {
     navigate('/')
   }
 
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId)
+      // Bloqueio por Inatividade de 15 minutos (900000 ms)
+      timeoutId = setTimeout(
+        () => {
+          handleLogout()
+        },
+        15 * 60 * 1000,
+      )
+    }
+
+    const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
+
+    if (user) {
+      resetTimeout()
+      events.forEach((event) => {
+        window.addEventListener(event, resetTimeout, { passive: true })
+      })
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimeout)
+      })
+    }
+  }, [user])
+
   const handleRoleSimulation = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRole = e.target.value as UserRole
     login({ ...user, role: newRole })

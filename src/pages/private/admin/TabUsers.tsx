@@ -159,7 +159,12 @@ export default function TabUsers() {
       return
     }
 
-    await logAudit('UPDATE', 'Usuários', `Perfil de ${editingUser.name} atualizado.`)
+    let auditDetails = `Perfil de ${editingUser.name} atualizado.`
+    if (selectedUser?.role !== editingUser.role) {
+      auditDetails = `Nível de acesso de ${editingUser.name} alterado de ${selectedUser?.role} para ${editingUser.role}.`
+    }
+
+    await logAudit('UPDATE', 'Usuários', auditDetails)
     toast.success('Cadastro atualizado com sucesso!')
     fetchUsers()
     setIsSheetOpen(false)
