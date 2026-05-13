@@ -30,7 +30,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useAuthStore, UserRole } from '@/stores/useAuthStore'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -56,6 +56,43 @@ export default function PrivateLayout() {
       navigate('/app')
     }
   }, [user, location, navigate])
+
+  const handleLogout = useCallback(async () => {
+    logout()
+    await signOut()
+    navigate('/')
+  }, [logout, signOut, navigate])
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId)
+      // Bloqueio por Inatividade de 15 minutos (900000 ms)
+      timeoutId = setTimeout(
+        () => {
+          handleLogout()
+        },
+        15 * 60 * 1000,
+      )
+    }
+
+    const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
+
+    if (user) {
+      resetTimeout()
+      events.forEach((event) => {
+        window.addEventListener(event, resetTimeout, { passive: true })
+      })
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimeout)
+      })
+    }
+  }, [user, handleLogout])
 
   if (loading || (!user && session)) {
     return (
@@ -106,43 +143,6 @@ export default function PrivateLayout() {
 
     return baseItems
   }
-
-  const handleLogout = async () => {
-    logout()
-    await signOut()
-    navigate('/')
-  }
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout
-
-    const resetTimeout = () => {
-      clearTimeout(timeoutId)
-      // Bloqueio por Inatividade de 15 minutos (900000 ms)
-      timeoutId = setTimeout(
-        () => {
-          handleLogout()
-        },
-        15 * 60 * 1000,
-      )
-    }
-
-    const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
-
-    if (user) {
-      resetTimeout()
-      events.forEach((event) => {
-        window.addEventListener(event, resetTimeout, { passive: true })
-      })
-    }
-
-    return () => {
-      clearTimeout(timeoutId)
-      events.forEach((event) => {
-        window.removeEventListener(event, resetTimeout)
-      })
-    }
-  }, [user])
 
   const handleRoleSimulation = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRole = e.target.value as UserRole
