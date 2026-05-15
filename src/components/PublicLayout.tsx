@@ -1,11 +1,19 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
-import { GraduationCap, User, MessageCircle, MapPin, Phone, Mail } from 'lucide-react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { GraduationCap, User, MessageCircle, MapPin, Phone, Mail, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function PublicLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const isHome = location.pathname === '/'
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/')
+  }
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -51,11 +59,21 @@ export default function PublicLayout() {
               asChild
               className="rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-subtle hover:scale-105 transition-transform duration-200"
             >
-              <Link to="/login">
+              <Link to={user ? '/app' : '/login'}>
                 <User className="mr-2 h-4 w-4" />
                 Área Restrita
               </Link>
             </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full flex items-center justify-center font-medium"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            )}
           </div>
         </div>
       </header>
