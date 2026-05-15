@@ -10,6 +10,7 @@ import TabUsers from './TabUsers'
 import TabAcademic from './TabAcademic'
 import TabAudit from './TabAudit'
 import TabTenants from './TabTenants'
+import TabPermissions from './TabPermissions'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 export default function AdminDashboard() {
@@ -61,6 +62,9 @@ export default function AdminDashboard() {
           <TabsTrigger value="audit" className="flex-1 min-w-[100px] rounded-lg">
             Auditoria
           </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex-1 min-w-[100px] rounded-lg">
+            Permissões
+          </TabsTrigger>
         </TabsList>
         {isMaster && (
           <TabsContent value="tenants">
@@ -87,6 +91,9 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="audit">
           <TabAudit />
+        </TabsContent>
+        <TabsContent value="permissions">
+          <TabPermissions />
         </TabsContent>
       </Tabs>
     </div>

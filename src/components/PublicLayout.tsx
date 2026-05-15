@@ -1,176 +1,86 @@
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { GraduationCap, User, MessageCircle, MapPin, Phone, Mail, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
 
 export default function PublicLayout() {
-  const location = useLocation()
-  const navigate = useNavigate()
   const { user, signOut } = useAuth()
-  const isHome = location.pathname === '/'
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/')
-  }
 
   return (
-    <div className="flex flex-col min-h-screen relative">
-      <header className="fixed top-0 w-full z-50 glass-header">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="bg-primary p-2 rounded-lg group-hover:scale-105 transition-transform duration-300">
-              <GraduationCap className="h-6 w-6 text-secondary" />
+            <div className="w-8 h-8 bg-blue-950 rounded-lg flex items-center justify-center transition-colors group-hover:bg-blue-900">
+              <span className="text-white font-bold">Y</span>
             </div>
-            <span className="font-display font-bold text-2xl text-primary">Colégio Yedon</span>
+            <span className="font-bold text-xl text-blue-950 group-hover:text-blue-900 transition-colors">
+              Colégio Yedon
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             <Link
               to="/institucional"
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-blue-950 transition-colors"
             >
               Institucional
             </Link>
             <Link
               to="/ciclos"
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-blue-950 transition-colors"
             >
               Ciclos
             </Link>
             <Link
               to="/parceiros"
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-blue-950 transition-colors"
             >
               Parceiros
             </Link>
+            <Link
+              to="/matriculas"
+              className="text-sm font-medium text-slate-600 hover:text-blue-950 transition-colors"
+            >
+              Matrículas 2027
+            </Link>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <Button
-              asChild
-              variant="ghost"
-              className="hidden lg:flex text-primary hover:text-primary hover:bg-primary/10"
-            >
-              <Link to="/matriculas">Matrículas 2027</Link>
-            </Button>
-            <Button
-              asChild
-              className="rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-subtle hover:scale-105 transition-transform duration-200"
-            >
-              <Link to={user ? '/app' : '/login'}>
-                <User className="mr-2 h-4 w-4" />
-                Área Restrita
-              </Link>
-            </Button>
-            {user && (
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full flex items-center justify-center font-medium"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="hidden sm:flex border-blue-950 text-blue-950 hover:bg-blue-50"
+                >
+                  <Link to="/app">Área Restrita</Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 font-medium"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair do Site
+                </Button>
+              </>
+            ) : (
+              <Button asChild className="bg-blue-950 text-white hover:bg-blue-900">
+                <Link to="/login">Área Restrita</Link>
               </Button>
             )}
           </div>
         </div>
       </header>
-
-      {/* Progress Bar for Home */}
-      {isHome && (
-        <div className="fixed top-20 left-0 w-full h-1 bg-gray-100 z-50">
-          <div className="h-full bg-secondary w-1/3 animate-pulse" />{' '}
-          {/* Simple mock for progress */}
-        </div>
-      )}
-
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         <Outlet />
       </main>
-
-      <footer className="bg-primary text-primary-foreground pt-16 pb-8">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <GraduationCap className="h-8 w-8 text-secondary" />
-              <span className="font-display font-bold text-2xl">Colégio Yedon</span>
-            </div>
-            <p className="text-primary-foreground/70 text-sm mb-6">
-              Transformando o futuro através de uma formação integral, inovadora e acolhedora.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-4 text-secondary">Contato</h4>
-            <ul className="space-y-3 text-sm text-primary-foreground/80">
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4" /> (11) 9999-9999
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4" /> contato@colegioyedon.com.br
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> Av. Educação, 1000 - SP
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-4 text-secondary">Links Rápidos</h4>
-            <ul className="space-y-2 text-sm text-primary-foreground/80">
-              <li>
-                <Link to="/institucional" className="hover:text-white transition-colors">
-                  Sobre Nós
-                </Link>
-              </li>
-              <li>
-                <Link to="/ciclos" className="hover:text-white transition-colors">
-                  Nossos Ciclos
-                </Link>
-              </li>
-              <li>
-                <Link to="/trabalhe-conosco" className="hover:text-white transition-colors">
-                  Trabalhe Conosco
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="hover:text-white transition-colors">
-                  Portal do Aluno
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-4 text-secondary">Localização</h4>
-            <div className="w-full h-32 bg-primary-foreground/10 rounded-lg flex items-center justify-center border border-primary-foreground/20">
-              <span className="text-sm text-primary-foreground/50">Mapa Integrado</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-4 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-primary-foreground/50">
-            © 2026 Colégio Yedon. Todos os direitos reservados.
-          </p>
-          <div className="flex items-center gap-4 text-xs text-primary-foreground/50">
-            <span>Parceiros Educacionais:</span>
-            <span className="font-semibold text-white/80">Objetivo</span>
-            <span className="font-semibold text-white/80">Edify</span>
-          </div>
+      <footer className="bg-slate-900 py-12 mt-auto">
+        <div className="container mx-auto px-4 text-center text-slate-400">
+          <p>&copy; 2027 Colégio Yedon. Todos os direitos reservados.</p>
         </div>
       </footer>
-
-      {/* FAB WhatsApp */}
-      <a
-        href="#"
-        className="fixed bottom-24 right-6 md:bottom-6 md:right-6 bg-green-500 text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform duration-300 z-50 animate-float"
-        aria-label="Contact on WhatsApp"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </a>
     </div>
   )
 }
