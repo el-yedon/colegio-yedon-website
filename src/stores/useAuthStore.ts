@@ -16,6 +16,7 @@ export interface User {
   role: UserRole
   avatar?: string
   childrenIds?: string[]
+  tenantName?: string
 }
 
 interface AuthState {

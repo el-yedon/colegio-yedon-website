@@ -47,15 +47,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       supabase
         .from('perfis')
-        .select('*')
+        .select('*, escolas(nome)')
         .eq('id', user.id)
         .single()
-        .then(({ data: profile }) => {
+        .then(({ data: profile }: any) => {
           useAuthStore.getState().login({
             name: profile?.nome || user.user_metadata?.name || user.email || '',
             email: user.email || '',
             role: profile?.papel || user.user_metadata?.role || 'student',
             avatar: profile?.avatar || user.user_metadata?.avatar,
+            tenantName: profile?.escolas?.nome || 'Sistema',
           })
         })
     } else {

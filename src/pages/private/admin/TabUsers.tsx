@@ -44,6 +44,7 @@ import {
 import { Search, Edit2, ShieldAlert, Lock, Image as ImageIcon, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import PhotoEditor from '@/components/PhotoEditor'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 type User = {
   id: string
@@ -55,6 +56,7 @@ type User = {
   role: string
   status: 'Ativo' | 'Inativo'
   photo: string
+  escola_id?: string
 }
 
 const roleMapToDb: Record<string, string> = {
@@ -86,6 +88,7 @@ export default function TabUsers() {
   const [activeTab, setActiveTab] = useState('details')
   const [currentUserRole, setCurrentUserRole] = useState('Master')
   const [deletePassword, setDeletePassword] = useState('')
+  const [escolas, setEscolas] = useState<{ id: string; nome: string }[]>([])
 
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
@@ -97,11 +100,23 @@ export default function TabUsers() {
     phone: '',
     document: '',
     address: '',
+    escola_id: '',
   })
+
+  const authUser = useAuthStore((state) => state.user)
+  const isActualMaster = authUser?.role === 'master'
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+    if (isActualMaster) {
+      fetchEscolas()
+    }
+  }, [isActualMaster])
+
+  const fetchEscolas = async () => {
+    const { data } = await supabase.from('escolas').select('id, nome').order('nome')
+    if (data) setEscolas(data)
+  }
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
@@ -120,6 +135,7 @@ export default function TabUsers() {
           role: roleMapFromDb[p.papel] || p.papel,
           status: (p as any).status || 'Ativo',
           photo: p.avatar || '',
+          escola_id: p.escola_id || '',
         })),
       )
     }
@@ -151,6 +167,7 @@ export default function TabUsers() {
         logradouro: editingUser.address,
         papel: roleMapToDb[editingUser.role] || editingUser.role,
         status: editingUser.status,
+        ...(isActualMaster && editingUser.escola_id ? { escola_id: editingUser.escola_id } : {}),
       } as any)
       .eq('id', editingUser.id)
 
@@ -227,7 +244,7 @@ export default function TabUsers() {
         .eq('id', authUser.id)
         .single()
 
-      const tenantId = profile?.escola_id
+      const tenantId = isActualMaster && newUser.escola_id ? newUser.escola_id : profile?.escola_id
 
       const res = await supabase.functions.invoke('create-user', {
         body: {
@@ -258,6 +275,7 @@ export default function TabUsers() {
         phone: '',
         document: '',
         address: '',
+        escola_id: '',
       })
     } catch (err: any) {
       toast.error(err.message || 'Erro ao criar usuário')
@@ -458,25 +476,47 @@ export default function TabUsers() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Nível de Acesso *</Label>
-              <Select
-                value={newUser.role}
-                onValueChange={(v) => setNewUser((p) => ({ ...p, role: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Master">Master</SelectItem>
-                  <SelectItem value="Administrador">Administrador</SelectItem>
-                  <SelectItem value="Diretor">Diretor</SelectItem>
-                  <SelectItem value="Coordenador">Coordenador</SelectItem>
-                  <SelectItem value="Professor">Professor</SelectItem>
-                  <SelectItem value="Aluno">Aluno</SelectItem>
-                  <SelectItem value="Responsável">Responsável</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nível de Acesso *</Label>
+                <Select
+                  value={newUser.role}
+                  onValueChange={(v) => setNewUser((p) => ({ ...p, role: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Master">Master</SelectItem>
+                    <SelectItem value="Administrador">Administrador</SelectItem>
+                    <SelectItem value="Diretor">Diretor</SelectItem>
+                    <SelectItem value="Coordenador">Coordenador</SelectItem>
+                    <SelectItem value="Professor">Professor</SelectItem>
+                    <SelectItem value="Aluno">Aluno</SelectItem>
+                    <SelectItem value="Responsável">Responsável</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {isActualMaster && (
+                <div className="space-y-2">
+                  <Label>Organização (SaaS) *</Label>
+                  <Select
+                    value={newUser.escola_id}
+                    onValueChange={(v) => setNewUser((p) => ({ ...p, escola_id: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a escola" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {escolas.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Endereço Completo</Label>
@@ -636,6 +676,28 @@ export default function TabUsers() {
                           </Select>
                         </div>
                       </div>
+                      {isActualMaster && (
+                        <div className="space-y-2">
+                          <Label>Organização (Tenant)</Label>
+                          <Select
+                            value={editingUser.escola_id}
+                            onValueChange={(v) =>
+                              setEditingUser((p) => (p ? { ...p, escola_id: v } : null))
+                            }
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue placeholder="Sem organização" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {escolas.map((e) => (
+                                <SelectItem key={e.id} value={e.id}>
+                                  {e.nome}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Label>Endereço Completo</Label>
                         <Textarea

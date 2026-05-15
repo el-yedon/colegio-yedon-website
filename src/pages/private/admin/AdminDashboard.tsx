@@ -9,8 +9,13 @@ import TabPartners from './TabPartners'
 import TabUsers from './TabUsers'
 import TabAcademic from './TabAcademic'
 import TabAudit from './TabAudit'
+import TabTenants from './TabTenants'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 export default function AdminDashboard() {
+  const authUser = useAuthStore((state) => state.user)
+  const isMaster = authUser?.role === 'master'
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -27,6 +32,14 @@ export default function AdminDashboard() {
 
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="flex flex-wrap h-auto w-full max-w-5xl justify-start gap-1 p-1 bg-muted rounded-xl">
+          {isMaster && (
+            <TabsTrigger
+              value="tenants"
+              className="flex-1 min-w-[100px] rounded-lg bg-blue-950/5 text-blue-950 data-[state=active]:bg-blue-950 data-[state=active]:text-yellow-500"
+            >
+              Organizações (SaaS)
+            </TabsTrigger>
+          )}
           <TabsTrigger value="users" className="flex-1 min-w-[100px] rounded-lg">
             Usuários
           </TabsTrigger>
@@ -49,6 +62,11 @@ export default function AdminDashboard() {
             Auditoria
           </TabsTrigger>
         </TabsList>
+        {isMaster && (
+          <TabsContent value="tenants">
+            <TabTenants />
+          </TabsContent>
+        )}
         <TabsContent value="users">
           <TabUsers />
         </TabsContent>

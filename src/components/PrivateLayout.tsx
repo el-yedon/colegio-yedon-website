@@ -212,9 +212,14 @@ export default function PrivateLayout() {
           <header className="h-16 bg-white border-b flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div className="hidden md:flex items-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Bem-vindo(a),</span>&nbsp;
-                {user.name.split(' ')[0]}
+              <div className="hidden md:flex flex-col">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Bem-vindo(a),</span>&nbsp;
+                  {user.name.split(' ')[0]}
+                </div>
+                {user.tenantName && (
+                  <span className="text-xs text-primary/80 font-medium">{user.tenantName}</span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-4">
