@@ -20,6 +20,7 @@ import Financial from './pages/private/Financial'
 import Marketplace from './pages/private/Marketplace'
 import Inbox from './pages/private/Inbox'
 import AdminDashboard from './pages/private/admin/AdminDashboard'
+import Roles from './pages/private/Roles'
 
 const App = () => (
   <AuthProvider>
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="inbox" element={<Inbox />} />
             <Route path="marketplace" element={<Marketplace />} />
             <Route path="admin" element={<AdminDashboard />} />
+            <Route path="roles" element={<Roles />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

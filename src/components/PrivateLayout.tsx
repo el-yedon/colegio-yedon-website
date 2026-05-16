@@ -12,6 +12,7 @@ import {
   Settings,
   Mail,
   Store,
+  Shield,
 } from 'lucide-react'
 import { useEffect } from 'react'
 
@@ -101,6 +102,12 @@ export default function PrivateLayout() {
                 className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-slate-800 hover:text-white transition-colors"
               >
                 <Settings className="w-5 h-5" /> Gestão Escolar
+              </Link>
+              <Link
+                to="/app/roles"
+                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Shield className="w-5 h-5" /> Níveis de Acesso
               </Link>
             </div>
           )}
